@@ -122,6 +122,21 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 throw new ArgumentException("沒有任何學生資料可列印。");
             }
 
+
+            #region 清除字典資料
+            sr_dict.Clear();
+            spr_dict.Clear();
+            sar_dict.Clear();
+            sphr_dict.Clear();
+            shr_dict.Clear();
+            ar_dict.Clear();
+            jssr_dict.Clear();
+            gsr_dict.Clear();
+            urr_dict.Clear();
+            msr_dict.Clear(); 
+            #endregion
+
+
             #region 抓取學生資料 
             //抓取學生資料 
             //學生基本資料
