@@ -62,7 +62,11 @@ namespace JHEvaluation.StudentScoreSummaryReport
         // 日常生活表現、校內外特殊表現 [studentID,List<Data>]
         Dictionary<string, List<K12.Data.MoralScoreRecord>> msr_dict = new Dictionary<string, List<K12.Data.MoralScoreRecord>>();
 
+        // 上課節次 設定(列入、不列入)
+        List<K12.Data.PeriodMappingInfo> periodMappingInfos = K12.Data.PeriodMapping.SelectAll();
 
+        // 缺曠的節次(一般)名稱
+        List<string> AbsencePeriod = new List<string>();
 
         private string fbdPath = "";
 
@@ -340,20 +344,55 @@ namespace JHEvaluation.StudentScoreSummaryReport
             table.Columns.Add("母親行動電話");
             #endregion
 
-            #region 班級座號資料
+            #region 學期歷程 班級、座號、班導師資料
             //班級座號資料
-            table.Columns.Add("年級1_班級");
-            table.Columns.Add("年級1_座號");
-            table.Columns.Add("年級2_班級");
-            table.Columns.Add("年級2_座號");
-            table.Columns.Add("年級3_班級");
-            table.Columns.Add("年級3_座號");
-            table.Columns.Add("年級4_班級");
-            table.Columns.Add("年級4_座號");
-            table.Columns.Add("年級5_班級");
-            table.Columns.Add("年級5_座號");
-            table.Columns.Add("年級6_班級");
-            table.Columns.Add("年級6_座號");
+            table.Columns.Add("班級1");
+            table.Columns.Add("座號1");
+            table.Columns.Add("班導師1");
+
+            table.Columns.Add("班級2");
+            table.Columns.Add("座號2");
+            table.Columns.Add("班導師2");
+
+            table.Columns.Add("班級3");
+            table.Columns.Add("座號3");
+            table.Columns.Add("班導師3");
+
+            table.Columns.Add("班級4");
+            table.Columns.Add("座號4");
+            table.Columns.Add("班導師4");
+
+            table.Columns.Add("班級5");
+            table.Columns.Add("座號5");
+            table.Columns.Add("班導師5");
+
+            table.Columns.Add("班級6");
+            table.Columns.Add("座號6");
+            table.Columns.Add("班導師6");
+
+            table.Columns.Add("班級7");
+            table.Columns.Add("座號7");
+            table.Columns.Add("班導師7");
+
+            table.Columns.Add("班級8");
+            table.Columns.Add("座號8");
+            table.Columns.Add("班導師8");
+
+            table.Columns.Add("班級9");
+            table.Columns.Add("座號9");
+            table.Columns.Add("班導師9");
+
+            table.Columns.Add("班級10");
+            table.Columns.Add("座號10");
+            table.Columns.Add("班導師10");
+
+            table.Columns.Add("班級11");
+            table.Columns.Add("座號11");
+            table.Columns.Add("班導師11");
+
+            table.Columns.Add("班級12");
+            table.Columns.Add("座號12");
+            table.Columns.Add("班導師12");
             #endregion
 
             #region 學年度
@@ -956,6 +995,12 @@ namespace JHEvaluation.StudentScoreSummaryReport
             //文字評量(日常生活表現及具體建議、校內外特殊表現)的對照
             Dictionary<string, string> textScore_dict = new Dictionary<string, string>();
 
+            foreach (K12.Data.PeriodMappingInfo var in periodMappingInfos)
+            {                                
+                if (var.Type =="一般" & !AbsencePeriod.Contains(var.Name))
+                    AbsencePeriod.Add(var.Name);
+            }
+
             int student_counter = 1;
 
             foreach (string stuID in StudentIDs)
@@ -1092,28 +1137,30 @@ namespace JHEvaluation.StudentScoreSummaryReport
                         if (item.GradeYear == 1)
                         {
                             row["學年度1"] = item.SchoolYear;
-                            row["年級1_班級"] = item.ClassName;
-                            row["年級1_座號"] = item.SeatNo;
-
+                            
                             //為學生的年級與學年配對
                             schoolyear_grade1 = item.SchoolYear;
 
                             if (item.Semester == 1)
                             {
                                 row["應出席日數_1"] = item.SchoolDayCount;
+
+                                row["班級1"] = item.ClassName;
+                                row["座號1"] = item.SeatNo;
+                                row["班導師1"] = item.Teacher;
                             }
                             else
                             {
                                 row["應出席日數_2"] = item.SchoolDayCount;
 
+                                row["班級2"] = item.ClassName;
+                                row["座號2"] = item.SeatNo;
+                                row["班導師2"] = item.Teacher;
                             }
-
                         }
                         if (item.GradeYear == 2)
                         {
                             row["學年度2"] = item.SchoolYear;
-                            row["年級2_班級"] = item.ClassName;
-                            row["年級2_座號"] = item.SeatNo;
 
                             //為學生的年級與學年配對
                             schoolyear_grade2 = item.SchoolYear;
@@ -1121,18 +1168,23 @@ namespace JHEvaluation.StudentScoreSummaryReport
                             if (item.Semester == 1)
                             {
                                 row["應出席日數_3"] = item.SchoolDayCount;
+
+                                row["班級3"] = item.ClassName;
+                                row["座號3"] = item.SeatNo;
+                                row["班導師3"] = item.Teacher;
                             }
                             else
                             {
                                 row["應出席日數_4"] = item.SchoolDayCount;
 
+                                row["班級4"] = item.ClassName;
+                                row["座號4"] = item.SeatNo;
+                                row["班導師4"] = item.Teacher;
                             }
                         }
                         if (item.GradeYear == 3)
                         {
                             row["學年度3"] = item.SchoolYear;
-                            row["年級3_班級"] = item.ClassName;
-                            row["年級3_座號"] = item.SeatNo;
 
                             //為學生的年級與學年配對
                             schoolyear_grade3 = item.SchoolYear;
@@ -1140,18 +1192,23 @@ namespace JHEvaluation.StudentScoreSummaryReport
                             if (item.Semester == 1)
                             {
                                 row["應出席日數_5"] = item.SchoolDayCount;
+
+                                row["班級5"] = item.ClassName;
+                                row["座號5"] = item.SeatNo;
+                                row["班導師5"] = item.Teacher;
                             }
                             else
                             {
                                 row["應出席日數_6"] = item.SchoolDayCount;
 
+                                row["班級6"] = item.ClassName;
+                                row["座號6"] = item.SeatNo;
+                                row["班導師6"] = item.Teacher;
                             }
                         }
                         if (item.GradeYear == 4)
                         {
                             row["學年度4"] = item.SchoolYear;
-                            row["年級4_班級"] = item.ClassName;
-                            row["年級4_座號"] = item.SeatNo;
 
                             //為學生的年級與學年配對
                             schoolyear_grade4 = item.SchoolYear;
@@ -1159,37 +1216,48 @@ namespace JHEvaluation.StudentScoreSummaryReport
                             if (item.Semester == 1)
                             {
                                 row["應出席日數_7"] = item.SchoolDayCount;
+
+                                row["班級7"] = item.ClassName;
+                                row["座號7"] = item.SeatNo;
+                                row["班導師7"] = item.Teacher;
                             }
                             else
                             {
                                 row["應出席日數_8"] = item.SchoolDayCount;
+
+                                row["班級8"] = item.ClassName;
+                                row["座號8"] = item.SeatNo;
+                                row["班導師8"] = item.Teacher;
 
                             }
                         }
                         if (item.GradeYear == 5)
                         {
                             row["學年度5"] = item.SchoolYear;
-                            row["年級5_班級"] = item.ClassName;
-                            row["年級5_座號"] = item.SeatNo;
-
+ 
                             //為學生的年級與學年配對
                             schoolyear_grade5 = item.SchoolYear;
 
                             if (item.Semester == 1)
                             {
                                 row["應出席日數_9"] = item.SchoolDayCount;
+
+                                row["班級9"] = item.ClassName;
+                                row["座號9"] = item.SeatNo;
+                                row["班導師9"] = item.Teacher;
                             }
                             else
                             {
                                 row["應出席日數_10"] = item.SchoolDayCount;
 
+                                row["班級10"] = item.ClassName;
+                                row["座號10"] = item.SeatNo;
+                                row["班導師10"] = item.Teacher;
                             }
                         }
                         if (item.GradeYear == 6)
                         {
                             row["學年度6"] = item.SchoolYear;
-                            row["年級6_班級"] = item.ClassName;
-                            row["年級6_座號"] = item.SeatNo;
 
                             //為學生的年級與學年配對
                             schoolyear_grade6 = item.SchoolYear;
@@ -1197,11 +1265,18 @@ namespace JHEvaluation.StudentScoreSummaryReport
                             if (item.Semester == 1)
                             {
                                 row["應出席日數_11"] = item.SchoolDayCount;
+
+                                row["班級11"] = item.ClassName;
+                                row["座號11"] = item.SeatNo;
+                                row["班導師11"] = item.Teacher;
                             }
                             else
                             {
                                 row["應出席日數_12"] = item.SchoolDayCount;
 
+                                row["班級12"] = item.ClassName;
+                                row["座號12"] = item.SeatNo;
+                                row["班導師12"] = item.Teacher;
                             }
                         }
                     }
@@ -1231,6 +1306,11 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                 {
                                     foreach (var detail in ar.PeriodDetail)
                                     {
+                                        // 假如該缺曠結束 沒有在 節次管理 設定為一般則跳過
+                                        if (!AbsencePeriod.Contains(detail.Period))
+                                        {
+                                            continue;
+                                        }
                                         if (arStatistic_dict.ContainsKey(detail.AbsenceType + "日數_" + (grade * 2 - 1)))
                                         {
 
@@ -1247,6 +1327,13 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                 {
                                     foreach (var detail in ar.PeriodDetail)
                                     {
+
+                                        // 假如該缺曠結束 沒有在 節次管理 設定為一般則跳過
+                                        if (!AbsencePeriod.Contains(detail.Period))
+                                        {
+                                            continue;
+                                        }
+
                                         if (arStatistic_dict.ContainsKey(detail.AbsenceType + "日數_" + grade * 2))
                                         {
 
@@ -1271,8 +1358,10 @@ namespace JHEvaluation.StudentScoreSummaryReport
                     //真正的填值，填日數，所以要做節次轉換
                     foreach (string key in arStatistic_dict_days.Keys)
                     {
-                        //康橋一日有九節，多一節缺曠 = 多1/9 日缺曠，先暫時寫死九節設定，日後要去學務作業每日節次抓取
-                        row[key] = Math.Round(arStatistic_dict_days[key] / 9, 2);
+                        // 一天幾節課
+                        int periodsADay = AbsencePeriod.Count;
+                        
+                        row[key] = Math.Round(arStatistic_dict_days[key] / periodsADay, 2);
                     }
                 }
 
