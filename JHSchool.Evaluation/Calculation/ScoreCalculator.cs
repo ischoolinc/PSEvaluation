@@ -6,6 +6,7 @@ namespace JHSchool.Evaluation.Calculation
 {
     public class ScoreCalculator
     {
+        private Round _attendRound = new Round(); // 2019/02/25 穎驊依據ESL 會議討論過後結果，將課程成績的進位規則也follow 學期科目成績的設定(原本的課程成績並沒有進位，有多少算多少)
         private Round _subjectRound = new Round();
         private Round _domainRound = new Round();
         private Round _learnDomainRound = new Round();
@@ -17,11 +18,14 @@ namespace JHSchool.Evaluation.Calculation
 
             XmlElement content = record.Content;
 
+            XmlElement attend = (XmlElement)content.SelectSingleNode("成績計算規則/各項成績計算位數/科目成績計算"); // 課程成績 吃的設定與 學期科目成績一樣
             XmlElement subject = (XmlElement)content.SelectSingleNode("成績計算規則/各項成績計算位數/科目成績計算");
             XmlElement domain = (XmlElement)content.SelectSingleNode("成績計算規則/各項成績計算位數/領域成績計算");
             XmlElement learnDomain = (XmlElement)content.SelectSingleNode("成績計算規則/各項成績計算位數/學習領域成績計算");
             XmlElement graduate = (XmlElement)content.SelectSingleNode("成績計算規則/各項成績計算位數/畢業成績計算");
 
+            if (attend != null)
+                _attendRound.SetData(int.Parse(attend.GetAttribute("位數")), attend.GetAttribute("進位方式"));
             if (subject != null)
                 _subjectRound.SetData(int.Parse(subject.GetAttribute("位數")), subject.GetAttribute("進位方式"));
             if (domain != null)
@@ -38,6 +42,11 @@ namespace JHSchool.Evaluation.Calculation
             //                    <學期領域成績計算 位數="2" 進位方式="四捨五入"/>
             //                    <學期學習領域成績計算 位數="2" 進位方式="四捨五入"/>
             //                    <畢業成績計算 位數="2" 進位方式="四捨五入"/>
+        }
+
+        public decimal ParseAttendScore(decimal score)
+        {
+            return _attendRound.GetRoundScore(score);
         }
 
         public decimal ParseSubjectScore(decimal score)

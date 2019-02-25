@@ -59,6 +59,7 @@ namespace JHEvaluation.ScoreCalculation.BigFunction
                         //}
                         CalculateKHAttendEffort(attend);
                     }
+                    attend.Value = student.CalculationRule.ParseAttendScore(attend.Value.Value);
                 }
             }
 
