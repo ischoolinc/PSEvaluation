@@ -26,6 +26,8 @@ namespace JHSchool.Evaluation.EduAdminExtendControls.Ribbon
 
         private void LoadDomain()
         {
+            bool containsLifeCoursedomain = false; // 是否有生活課程
+
             ConfigData cd = K12.Data.School.Configuration[ConfigName];
             if (cd.Contains(ColumnKey))
             {
@@ -36,10 +38,23 @@ namespace JHSchool.Evaluation.EduAdminExtendControls.Ribbon
                     string name = domainElement.GetAttribute("Name");
                     string englishName = domainElement.GetAttribute("EnglishName");
 
+                    if (name == "生活課程") 
+                    {
+                        containsLifeCoursedomain = true;
+                    }
+
                     DataGridViewRow row = new DataGridViewRow();
                     row.CreateCells(dgv, group, name, englishName);
                     dgv.Rows.Add(row);
                 }
+
+                if (!containsLifeCoursedomain)
+                {
+                    DataGridViewRow row = new DataGridViewRow();
+                    row.CreateCells(dgv, "", "生活課程", "");
+                    dgv.Rows.Add(row);
+                }
+
             }
         }
 

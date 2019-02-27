@@ -1387,6 +1387,12 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                     // 領域為彈性課程 、或是沒有領域的科目成績 算到彈性課程科目處理
                                     if (subjectscore.Value.Domain == "彈性課程" || subjectscore.Value.Domain == "")
                                     {
+                                        // 對照科目名稱如果已經有，跳過
+                                        if (AlternativeCourseDict.ContainsKey(subjectscore.Value.Subject))
+                                        {
+                                            break;
+                                        }
+
                                         AlternativeCourse++;
 
                                         // 目前僅先支援 一個學生在六年之中有 七個 彈性課程
@@ -1717,19 +1723,19 @@ namespace JHEvaluation.StudentScoreSummaryReport
         private string ScoreTolevel(decimal? d)
         {
             string level = "";
-            if (d > 90)
+            if (d >= 90)
             {
                 level = "優";
             }
-            else if (d > 80 && d < 90)
+            else if (d >= 80 && d < 90)
             {
                 level = "甲";
             }
-            else if (d > 70 && d < 80)
+            else if (d >= 70 && d < 80)
             {
                 level = "乙";
             }
-            else if (d > 60 && d < 70)
+            else if (d >= 60 && d < 70)
             {
                 level = "丙";
             }
