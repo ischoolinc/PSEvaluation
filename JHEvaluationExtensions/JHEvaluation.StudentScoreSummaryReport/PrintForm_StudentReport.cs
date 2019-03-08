@@ -1530,15 +1530,15 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                         {
                                             AlternativeCourse = AlternativeCourseDict[subjectscore.Value.Subject];
                                             //紀錄成績
-                                            if (subjectScore_dict.ContainsKey("科目_" + "彈性課程" + AlternativeCourse + "_成績_" + (grade * 2 - 1)))
+                                            if (subjectScore_dict.ContainsKey("科目_" + "彈性課程" + AlternativeCourse + "_成績_" + (grade * 2 )))
                                             {                                               
-                                                subjectScore_dict["科目_" + "彈性課程" + AlternativeCourse + "_成績_" + (grade * 2 - 1)] = subjectscore.Value.Score;
+                                                subjectScore_dict["科目_" + "彈性課程" + AlternativeCourse + "_成績_" + (grade * 2)] = subjectscore.Value.Score;
                                             }
 
                                             //紀錄等第
-                                            if (subjectLevel_dict.ContainsKey("科目_" + "彈性課程" + AlternativeCourse + "_等第_" + (grade * 2 - 1)))
+                                            if (subjectLevel_dict.ContainsKey("科目_" + "彈性課程" + AlternativeCourse + "_等第_" + (grade * 2)))
                                             {
-                                                subjectLevel_dict["科目_" + "彈性課程" + AlternativeCourse + "_等第_" + (grade * 2 - 1)] = ScoreTolevel(subjectscore.Value.Score);
+                                                subjectLevel_dict["科目_" + "彈性課程" + AlternativeCourse + "_等第_" + (grade * 2)] = ScoreTolevel(subjectscore.Value.Score);
                                             }
                                         }
 
