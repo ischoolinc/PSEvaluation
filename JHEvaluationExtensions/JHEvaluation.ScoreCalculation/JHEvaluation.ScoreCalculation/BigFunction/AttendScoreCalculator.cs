@@ -59,7 +59,13 @@ namespace JHEvaluation.ScoreCalculation.BigFunction
                         //}
                         CalculateKHAttendEffort(attend);
                     }
-                    attend.Value = student.CalculationRule.ParseAttendScore(attend.Value.Value);
+                    // 穎驊註解， 此為ESL 2019 寒假優化 項目，一併的調整
+                    // 原本課程成績 沒有做任何的 成績計算規則設定，算幾位數就會幾位數(EX: 96.677777777)
+                    // 現在課程成績如果 有的話 依照成績計算規則 科目成績小數位數設定 四捨五入
+                    if (attend.Value != null)
+                    {
+                        attend.Value = student.CalculationRule.ParseAttendScore(attend.Value.Value);
+                    }                    
                 }
             }
 

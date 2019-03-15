@@ -688,6 +688,33 @@ namespace JHEvaluation.StudentScoreSummaryReport
             table.Columns.Add("領域_學習領域總成績_等第_11");
             table.Columns.Add("領域_學習領域總成績_等第_12");
 
+            table.Columns.Add("領域_課程學習成績_成績_1");
+            table.Columns.Add("領域_課程學習成績_成績_2");
+            table.Columns.Add("領域_課程學習成績_成績_3");
+            table.Columns.Add("領域_課程學習成績_成績_4");
+            table.Columns.Add("領域_課程學習成績_成績_5");
+            table.Columns.Add("領域_課程學習成績_成績_6");
+            table.Columns.Add("領域_課程學習成績_成績_7");
+            table.Columns.Add("領域_課程學習成績_成績_8");
+            table.Columns.Add("領域_課程學習成績_成績_9");
+            table.Columns.Add("領域_課程學習成績_成績_10");
+            table.Columns.Add("領域_課程學習成績_成績_11");
+            table.Columns.Add("領域_課程學習成績_成績_12");
+
+
+            table.Columns.Add("領域_課程學習成績_等第_1");
+            table.Columns.Add("領域_課程學習成績_等第_2");
+            table.Columns.Add("領域_課程學習成績_等第_3");
+            table.Columns.Add("領域_課程學習成績_等第_4");
+            table.Columns.Add("領域_課程學習成績_等第_5");
+            table.Columns.Add("領域_課程學習成績_等第_6");
+            table.Columns.Add("領域_課程學習成績_等第_7");
+            table.Columns.Add("領域_課程學習成績_等第_8");
+            table.Columns.Add("領域_課程學習成績_等第_9");
+            table.Columns.Add("領域_課程學習成績_等第_10");
+            table.Columns.Add("領域_課程學習成績_等第_11");
+            table.Columns.Add("領域_課程學習成績_等第_12");
+
 
             #endregion
 
@@ -927,8 +954,9 @@ namespace JHEvaluation.StudentScoreSummaryReport
             domainScoreType_list.Add("領域_藝術與人文_成績_");
             domainScoreType_list.Add("領域_社會_成績_");
             domainScoreType_list.Add("領域_健康與體育_成績_");
-            domainScoreType_list.Add("領域_綜合活動_成績_");            
+            domainScoreType_list.Add("領域_綜合活動_成績_");
             domainScoreType_list.Add("領域_學習領域總成績_成績_");
+            domainScoreType_list.Add("領域_課程學習成績_成績_");
             #endregion
 
             #region 整理所有的領域_OO_等第
@@ -942,8 +970,9 @@ namespace JHEvaluation.StudentScoreSummaryReport
             domainLevelType_list.Add("領域_藝術與人文_等第_");
             domainLevelType_list.Add("領域_社會_等第_");
             domainLevelType_list.Add("領域_健康與體育_等第_");
-            domainLevelType_list.Add("領域_綜合活動_等第_");            
+            domainLevelType_list.Add("領域_綜合活動_等第_");
             domainLevelType_list.Add("領域_學習領域總成績_等第_");
+            domainLevelType_list.Add("領域_課程學習成績_等第_");
             #endregion
 
             #region 整理科目_OO_成績
@@ -1459,11 +1488,11 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                         if (subjectscore.Value.Domain == "彈性課程" || subjectscore.Value.Domain == "")
                                         {
                                             AlternativeCourse = AlternativeCourseDict[subjectscore.Value.Subject];
-                                            
+
                                             //紀錄成績
                                             if (subjectScore_dict.ContainsKey("科目_" + "彈性課程" + AlternativeCourse + "_成績_" + (grade * 2 - 1)))
                                             {
-                                               
+
                                                 subjectScore_dict["科目_" + "彈性課程" + AlternativeCourse + "_成績_" + (grade * 2 - 1)] = subjectscore.Value.Score;
                                             }
 
@@ -1476,7 +1505,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
                                     }
 
-                                    //學期學習領域(七大)成績
+                                    //學期學習領域(七大)成績(不包括彈性課程成績)
                                     //紀錄成績
                                     if (domainScore_dict.ContainsKey("領域_學習領域總成績_成績_" + (grade * 2 - 1)))
                                     {
@@ -1487,6 +1516,19 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                     if (domainLevel_dict.ContainsKey("領域_學習領域總成績_等第_" + (grade * 2 - 1)))
                                     {
                                         domainLevel_dict["領域_學習領域總成績_等第_" + (grade * 2 - 1)] = ScoreTolevel(jssr.LearnDomainScore);
+                                    }
+
+                                    //課程學習成績(包括彈性課程成績)
+                                    //紀錄成績
+                                    if (domainScore_dict.ContainsKey("領域_課程學習成績_成績_" + (grade * 2 - 1)))
+                                    {
+                                        domainScore_dict["領域_課程學習成績_成績_" + (grade * 2 - 1)] = jssr.CourseLearnScore;
+                                    }
+
+                                    //換算等第
+                                    if (domainLevel_dict.ContainsKey("領域_課程學習成績_等第_" + (grade * 2 - 1)))
+                                    {
+                                        domainLevel_dict["領域_課程學習成績_等第_" + (grade * 2 - 1)] = ScoreTolevel(jssr.CourseLearnScore);
                                     }
 
 
@@ -1530,8 +1572,8 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                         {
                                             AlternativeCourse = AlternativeCourseDict[subjectscore.Value.Subject];
                                             //紀錄成績
-                                            if (subjectScore_dict.ContainsKey("科目_" + "彈性課程" + AlternativeCourse + "_成績_" + (grade * 2 )))
-                                            {                                               
+                                            if (subjectScore_dict.ContainsKey("科目_" + "彈性課程" + AlternativeCourse + "_成績_" + (grade * 2)))
+                                            {
                                                 subjectScore_dict["科目_" + "彈性課程" + AlternativeCourse + "_成績_" + (grade * 2)] = subjectscore.Value.Score;
                                             }
 
@@ -1555,6 +1597,19 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                     if (domainLevel_dict.ContainsKey("領域_學習領域總成績_等第_" + (grade * 2)))
                                     {
                                         domainLevel_dict["領域_學習領域總成績_等第_" + (grade * 2)] = ScoreTolevel(jssr.LearnDomainScore);
+                                    }
+
+                                    //課程學習成績(包括彈性課程成績)
+                                    //紀錄成績
+                                    if (domainScore_dict.ContainsKey("領域_課程學習成績_成績_" + (grade * 2 )))
+                                    {
+                                        domainScore_dict["領域_課程學習成績_成績_" + (grade * 2 )] = jssr.CourseLearnScore;
+                                    }
+
+                                    //換算等第
+                                    if (domainLevel_dict.ContainsKey("領域_課程學習成績_等第_" + (grade * 2 )))
+                                    {
+                                        domainLevel_dict["領域_課程學習成績_等第_" + (grade * 2 )] = ScoreTolevel(jssr.CourseLearnScore);
                                     }
 
 
@@ -1607,6 +1662,8 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 {
                     int updateRecordCount = 1;
 
+                    urr_dict[stuID].Sort((x, y) => { return x.UpdateCode.CompareTo(y.UpdateCode); });
+
                     foreach (K12.Data.UpdateRecordRecord urr in urr_dict[stuID])
                     {
                         // 新生異動為1 ，且理論上 一個人 會有1筆新生異動
@@ -1617,6 +1674,13 @@ namespace JHEvaluation.StudentScoreSummaryReport
                             enterday = DateTime.Parse(urr.UpdateDate);
                             // 轉換入學時間 成 2005/09/06 的格式
                             row["入學年月"] = enterday.ToString("yyyy/MM");
+
+                            row["異動紀錄" + updateRecordCount + "_日期"] = urr.UpdateDate;
+                            row["異動紀錄" + updateRecordCount + "_校名"] = ""; // 2019/03/15 怡芬說 新生異動 校名 空白
+                            row["異動紀錄" + updateRecordCount + "_類別"] = "新生";
+                            row["異動紀錄" + updateRecordCount + "_核准日期"] = urr.ADDate;
+
+                            updateRecordCount++;
                         }
 
                         //  當異動為 轉入 (3) 、轉出(4)時 要依序顯示在 報表上
