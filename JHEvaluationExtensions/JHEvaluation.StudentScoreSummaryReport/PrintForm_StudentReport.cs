@@ -1080,7 +1080,11 @@ namespace JHEvaluation.StudentScoreSummaryReport
                     {
                         subjectScore_dict.Add(sst + i, null);
 
-                        table.Columns.Add(sst + i);
+                        if (!table.Columns.Contains(sst + i))
+                        {
+                            table.Columns.Add(sst + i);
+                        }
+                        
                     }
                 }
 
@@ -1091,7 +1095,10 @@ namespace JHEvaluation.StudentScoreSummaryReport
                     {
                         subjectLevel_dict.Add(slt + i, null);
 
-                        table.Columns.Add(slt + i);
+                        if (!table.Columns.Contains(slt + i))
+                        {
+                            table.Columns.Add(slt + i);
+                        }                        
                     }
                 }
 
