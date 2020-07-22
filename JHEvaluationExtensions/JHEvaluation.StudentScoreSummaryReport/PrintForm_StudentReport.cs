@@ -12,6 +12,9 @@ using Campus.Report;
 using JHSchool.Behavior.BusinessLogic;
 using System.IO;
 using System.Data;
+using System.Linq;
+using JHScoreReportDAL;
+using JHSchool.Evaluation;
 
 namespace JHEvaluation.StudentScoreSummaryReport
 {
@@ -28,6 +31,10 @@ namespace JHEvaluation.StudentScoreSummaryReport
         private BackgroundWorker ConvertToPDF_Worker = new BackgroundWorker();
 
         //private List<ReportStudent> PrintStudents = new List<ReportStudent>();
+
+        //領域科目資料管理設定的資料
+        JHScoreReportDAL.Config _DomainSubjectConfig = new Config();
+        List<string> _SujectTemplateList = new List<string>();
 
         private List<K12.Data.StudentRecord> PrintStudents = new List<K12.Data.StudentRecord>();
 
@@ -128,6 +135,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
 
             #region 清除字典資料
+            _SujectTemplateList.Clear();
             sr_dict.Clear();
             spr_dict.Clear();
             sar_dict.Clear();
@@ -137,10 +145,16 @@ namespace JHEvaluation.StudentScoreSummaryReport
             jssr_dict.Clear();
             gsr_dict.Clear();
             urr_dict.Clear();
-            msr_dict.Clear(); 
+            msr_dict.Clear();
             #endregion
 
-
+            //取得領域科目資料管理設定的資料
+            _DomainSubjectConfig.GetConfigData();
+            foreach (ConfigItem item in _DomainSubjectConfig.GetSubjectItemList())
+            {
+                _SujectTemplateList.Add(item.Name);
+            }
+            
             #region 抓取學生資料 
             //抓取學生資料 
             //學生基本資料
@@ -164,7 +178,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
             //缺曠
             List<K12.Data.AttendanceRecord> ar_list = K12.Data.Attendance.SelectByStudentIDs(StudentIDs);
 
-           
+
             //學生異動
             List<K12.Data.UpdateRecordRecord> urr_list = K12.Data.UpdateRecord.SelectByStudentIDs(StudentIDs);
 
@@ -228,6 +242,24 @@ namespace JHEvaluation.StudentScoreSummaryReport
             //整理學期成績(包含領域、科目) 紀錄
             foreach (JHSemesterScoreRecord ssr in ssr_list)
             {
+                Dictionary<string, K12.Data.SubjectScore> subjectScoreDic = new Dictionary<string, K12.Data.SubjectScore>();
+                List<string> subjectNameList = new List<string>();
+                subjectNameList = ssr.Subjects.Keys.ToList();
+
+                subjectNameList.Sort(new PSEvaluation.StudentScoreSummaryReport.StringComparer(_SujectTemplateList.ToArray()));
+
+                foreach (string subjectName in subjectNameList)
+                {
+                    K12.Data.SubjectScore score = ssr.Subjects[subjectName];
+                    subjectScoreDic.Add(subjectName, score);
+                }
+
+                ssr.Subjects = subjectScoreDic;
+            }
+
+            foreach (JHSemesterScoreRecord ssr in ssr_list)
+            {
+                
                 if (!jssr_dict.ContainsKey(ssr.RefStudentID))
                 {
                     jssr_dict.Add(ssr.RefStudentID, new List<JHSemesterScoreRecord>());
@@ -312,25 +344,58 @@ namespace JHEvaluation.StudentScoreSummaryReport
             #endregion
 
             #region 異動紀錄
-            // 2019/02/13  穎驊依據 康橋怡芬需求 由偉庭統一需求後
-            // 新增以下 異動紀錄資料欄位
+            // 2020/07/16 俊緯更新，新增核准文號並增加可以記錄的異動資料數量
             //異動紀錄
             table.Columns.Add("異動紀錄1_日期");
             table.Columns.Add("異動紀錄1_校名");
             table.Columns.Add("異動紀錄1_類別");
             table.Columns.Add("異動紀錄1_核准日期");
+            table.Columns.Add("異動紀錄1_核准文號");
             table.Columns.Add("異動紀錄2_日期");
             table.Columns.Add("異動紀錄2_校名");
             table.Columns.Add("異動紀錄2_類別");
             table.Columns.Add("異動紀錄2_核准日期");
+            table.Columns.Add("異動紀錄2_核准文號");
             table.Columns.Add("異動紀錄3_日期");
             table.Columns.Add("異動紀錄3_校名");
             table.Columns.Add("異動紀錄3_類別");
             table.Columns.Add("異動紀錄3_核准日期");
+            table.Columns.Add("異動紀錄3_核准文號");
             table.Columns.Add("異動紀錄4_日期");
             table.Columns.Add("異動紀錄4_校名");
             table.Columns.Add("異動紀錄4_類別");
             table.Columns.Add("異動紀錄4_核准日期");
+            table.Columns.Add("異動紀錄4_核准文號");
+            table.Columns.Add("異動紀錄5_日期");
+            table.Columns.Add("異動紀錄5_校名");
+            table.Columns.Add("異動紀錄5_類別");
+            table.Columns.Add("異動紀錄5_核准日期");
+            table.Columns.Add("異動紀錄5_核准文號");
+            table.Columns.Add("異動紀錄6_日期");
+            table.Columns.Add("異動紀錄6_校名");
+            table.Columns.Add("異動紀錄6_類別");
+            table.Columns.Add("異動紀錄6_核准日期");
+            table.Columns.Add("異動紀錄6_核准文號");
+            table.Columns.Add("異動紀錄7_日期");
+            table.Columns.Add("異動紀錄7_校名");
+            table.Columns.Add("異動紀錄7_類別");
+            table.Columns.Add("異動紀錄7_核准日期");
+            table.Columns.Add("異動紀錄7_核准文號");
+            table.Columns.Add("異動紀錄8_日期");
+            table.Columns.Add("異動紀錄8_校名");
+            table.Columns.Add("異動紀錄8_類別");
+            table.Columns.Add("異動紀錄8_核准日期");
+            table.Columns.Add("異動紀錄8_核准文號");
+            table.Columns.Add("異動紀錄9_日期");
+            table.Columns.Add("異動紀錄9_校名");
+            table.Columns.Add("異動紀錄9_類別");
+            table.Columns.Add("異動紀錄9_核准日期");
+            table.Columns.Add("異動紀錄9_核准文號");
+            table.Columns.Add("異動紀錄10_日期");
+            table.Columns.Add("異動紀錄10_校名");
+            table.Columns.Add("異動紀錄10_類別");
+            table.Columns.Add("異動紀錄10_核准日期");
+            table.Columns.Add("異動紀錄10_核准文號");
 
             #endregion
 
@@ -338,9 +403,9 @@ namespace JHEvaluation.StudentScoreSummaryReport
             table.Columns.Add("監護人姓名");
             table.Columns.Add("監護人關係");
             table.Columns.Add("監護人行動電話");
-            table.Columns.Add("父親姓名");            
+            table.Columns.Add("父親姓名");
             table.Columns.Add("父親行動電話");
-            table.Columns.Add("母親姓名");            
+            table.Columns.Add("母親姓名");
             table.Columns.Add("母親行動電話");
             #endregion
 
@@ -719,67 +784,78 @@ namespace JHEvaluation.StudentScoreSummaryReport
             #endregion
 
             #region 科目成績
-            // 改用 loop 加入
             //科目成績
-            //table.Columns.Add("科目_國語_成績_1");
-            //table.Columns.Add("科目_國語_成績_2");
-            //table.Columns.Add("科目_國語_成績_3");
-            //table.Columns.Add("科目_國語_成績_4");
-            //table.Columns.Add("科目_國語_成績_5");
-            //table.Columns.Add("科目_國語_成績_6");
-            //table.Columns.Add("科目_國語_成績_7");
-            //table.Columns.Add("科目_國語_成績_8");
-            //table.Columns.Add("科目_國語_成績_9");
-            //table.Columns.Add("科目_國語_成績_10");
-            //table.Columns.Add("科目_國語_成績_11");
-            //table.Columns.Add("科目_國語_成績_12");
+            table.Columns.Add("語文1_科目名稱");
+            table.Columns.Add("語文2_科目名稱");
+            table.Columns.Add("語文3_科目名稱");
+            table.Columns.Add("語文4_科目名稱");
+            table.Columns.Add("語文5_科目名稱");
+            table.Columns.Add("語文6_科目名稱");
+            table.Columns.Add("數學1_科目名稱");
+            table.Columns.Add("數學2_科目名稱");
+            table.Columns.Add("數學3_科目名稱");
+            table.Columns.Add("數學4_科目名稱");
+            table.Columns.Add("數學5_科目名稱");
+            table.Columns.Add("數學6_科目名稱");
+            table.Columns.Add("自然科學1_科目名稱");
+            table.Columns.Add("自然科學2_科目名稱");
+            table.Columns.Add("自然科學3_科目名稱");
+            table.Columns.Add("自然科學4_科目名稱");
+            table.Columns.Add("自然科學5_科目名稱");
+            table.Columns.Add("自然科學6_科目名稱");
+            table.Columns.Add("科技1_科目名稱");
+            table.Columns.Add("科技2_科目名稱");
+            table.Columns.Add("科技3_科目名稱");
+            table.Columns.Add("科技4_科目名稱");
+            table.Columns.Add("科技5_科目名稱");
+            table.Columns.Add("科技6_科目名稱");
+            table.Columns.Add("社會1_科目名稱");
+            table.Columns.Add("社會2_科目名稱");
+            table.Columns.Add("社會3_科目名稱");
+            table.Columns.Add("社會4_科目名稱");
+            table.Columns.Add("社會5_科目名稱");
+            table.Columns.Add("社會6_科目名稱");
+            table.Columns.Add("藝術1_科目名稱");
+            table.Columns.Add("藝術2_科目名稱");
+            table.Columns.Add("藝術3_科目名稱");
+            table.Columns.Add("藝術4_科目名稱");
+            table.Columns.Add("藝術5_科目名稱");
+            table.Columns.Add("藝術6_科目名稱");
+            table.Columns.Add("健康與體育1_科目名稱");
+            table.Columns.Add("健康與體育2_科目名稱");
+            table.Columns.Add("健康與體育3_科目名稱");
+            table.Columns.Add("健康與體育4_科目名稱");
+            table.Columns.Add("健康與體育5_科目名稱");
+            table.Columns.Add("健康與體育6_科目名稱");
+            table.Columns.Add("綜合活動1_科目名稱");
+            table.Columns.Add("綜合活動2_科目名稱");
+            table.Columns.Add("綜合活動3_科目名稱");
+            table.Columns.Add("綜合活動4_科目名稱");
+            table.Columns.Add("綜合活動5_科目名稱");
+            table.Columns.Add("綜合活動6_科目名稱");
+            table.Columns.Add("藝術與人文1_科目名稱");
+            table.Columns.Add("藝術與人文2_科目名稱");
+            table.Columns.Add("藝術與人文3_科目名稱");
+            table.Columns.Add("藝術與人文4_科目名稱");
+            table.Columns.Add("藝術與人文5_科目名稱");
+            table.Columns.Add("藝術與人文6_科目名稱");
+            table.Columns.Add("自然與生活科技1_科目名稱");
+            table.Columns.Add("自然與生活科技2_科目名稱");
+            table.Columns.Add("自然與生活科技3_科目名稱");
+            table.Columns.Add("自然與生活科技4_科目名稱");
+            table.Columns.Add("自然與生活科技5_科目名稱");
+            table.Columns.Add("自然與生活科技6_科目名稱");
 
-            //table.Columns.Add("科目_國語_等第_1");
-            //table.Columns.Add("科目_國語_等第_2");
-            //table.Columns.Add("科目_國語_等第_3");
-            //table.Columns.Add("科目_國語_等第_4");
-            //table.Columns.Add("科目_國語_等第_5");
-            //table.Columns.Add("科目_國語_等第_6");
-            //table.Columns.Add("科目_國語_等第_7");
-            //table.Columns.Add("科目_國語_等第_8");
-            //table.Columns.Add("科目_國語_等第_9");
-            //table.Columns.Add("科目_國語_等第_10");
-            //table.Columns.Add("科目_國語_等第_11");
-            //table.Columns.Add("科目_國語_等第_12");
-
-            //table.Columns.Add("科目_英語_成績_1");
-            //table.Columns.Add("科目_英語_成績_2");
-            //table.Columns.Add("科目_英語_成績_3");
-            //table.Columns.Add("科目_英語_成績_4");
-            //table.Columns.Add("科目_英語_成績_5");
-            //table.Columns.Add("科目_英語_成績_6");
-            //table.Columns.Add("科目_英語_成績_7");
-            //table.Columns.Add("科目_英語_成績_8");
-            //table.Columns.Add("科目_英語_成績_9");
-            //table.Columns.Add("科目_英語_成績_10");
-            //table.Columns.Add("科目_英語_成績_11");
-            //table.Columns.Add("科目_英語_成績_12");
-
-            //table.Columns.Add("科目_英語_等第_1");
-            //table.Columns.Add("科目_英語_等第_2");
-            //table.Columns.Add("科目_英語_等第_3");
-            //table.Columns.Add("科目_英語_等第_4");
-            //table.Columns.Add("科目_英語_等第_5");
-            //table.Columns.Add("科目_英語_等第_6");
-            //table.Columns.Add("科目_英語_等第_7");
-            //table.Columns.Add("科目_英語_等第_8");
-            //table.Columns.Add("科目_英語_等第_9");
-            //table.Columns.Add("科目_英語_等第_10");
-            //table.Columns.Add("科目_英語_等第_11");
-            //table.Columns.Add("科目_英語_等第_12");
-
-            table.Columns.Add("彈性課程1_名稱");
-            table.Columns.Add("彈性課程2_名稱");
-            table.Columns.Add("彈性課程3_名稱");
-            table.Columns.Add("彈性課程4_名稱");
-            table.Columns.Add("彈性課程5_名稱");
-            table.Columns.Add("彈性課程6_名稱");
-            table.Columns.Add("彈性課程7_名稱");
+            table.Columns.Add("彈性課程1_科目名稱");
+            table.Columns.Add("彈性課程2_科目名稱");
+            table.Columns.Add("彈性課程3_科目名稱");
+            table.Columns.Add("彈性課程4_科目名稱");
+            table.Columns.Add("彈性課程5_科目名稱");
+            table.Columns.Add("彈性課程6_科目名稱");
+            table.Columns.Add("彈性課程7_科目名稱");
+            table.Columns.Add("彈性課程8_科目名稱");
+            table.Columns.Add("彈性課程9_科目名稱");
+            table.Columns.Add("彈性課程10_科目名稱");
 
             #endregion
 
@@ -979,16 +1055,77 @@ namespace JHEvaluation.StudentScoreSummaryReport
             //整理科目_OO_成績
             List<string> subjectScoreType_list = new List<string>();
 
-            subjectScoreType_list.Add("科目_國語_成績_");
-            subjectScoreType_list.Add("科目_英語_成績_");
+            subjectScoreType_list.Add("語文1_科目成績_");
+            subjectScoreType_list.Add("語文2_科目成績_");
+            subjectScoreType_list.Add("語文3_科目成績_");
+            subjectScoreType_list.Add("語文4_科目成績_");
+            subjectScoreType_list.Add("語文5_科目成績_");
+            subjectScoreType_list.Add("語文6_科目成績_");
+            subjectScoreType_list.Add("數學1_科目成績_");
+            subjectScoreType_list.Add("數學2_科目成績_");
+            subjectScoreType_list.Add("數學3_科目成績_");
+            subjectScoreType_list.Add("數學4_科目成績_");
+            subjectScoreType_list.Add("數學5_科目成績_");
+            subjectScoreType_list.Add("數學6_科目成績_");
+            subjectScoreType_list.Add("自然科學1_科目成績_");
+            subjectScoreType_list.Add("自然科學2_科目成績_");
+            subjectScoreType_list.Add("自然科學3_科目成績_");
+            subjectScoreType_list.Add("自然科學4_科目成績_");
+            subjectScoreType_list.Add("自然科學5_科目成績_");
+            subjectScoreType_list.Add("自然科學6_科目成績_");
+            subjectScoreType_list.Add("科技1_科目成績_");
+            subjectScoreType_list.Add("科技2_科目成績_");
+            subjectScoreType_list.Add("科技3_科目成績_");
+            subjectScoreType_list.Add("科技4_科目成績_");
+            subjectScoreType_list.Add("科技5_科目成績_");
+            subjectScoreType_list.Add("科技6_科目成績_");
+            subjectScoreType_list.Add("社會1_科目成績_");
+            subjectScoreType_list.Add("社會2_科目成績_");
+            subjectScoreType_list.Add("社會3_科目成績_");
+            subjectScoreType_list.Add("社會4_科目成績_");
+            subjectScoreType_list.Add("社會5_科目成績_");
+            subjectScoreType_list.Add("社會6_科目成績_");
+            subjectScoreType_list.Add("藝術1_科目成績_");
+            subjectScoreType_list.Add("藝術2_科目成績_");
+            subjectScoreType_list.Add("藝術3_科目成績_");
+            subjectScoreType_list.Add("藝術4_科目成績_");
+            subjectScoreType_list.Add("藝術5_科目成績_");
+            subjectScoreType_list.Add("藝術6_科目成績_");
+            subjectScoreType_list.Add("健康與體育1_科目成績_");
+            subjectScoreType_list.Add("健康與體育2_科目成績_");
+            subjectScoreType_list.Add("健康與體育3_科目成績_");
+            subjectScoreType_list.Add("健康與體育4_科目成績_");
+            subjectScoreType_list.Add("健康與體育5_科目成績_");
+            subjectScoreType_list.Add("健康與體育6_科目成績_");
+            subjectScoreType_list.Add("綜合活動1_科目成績_");
+            subjectScoreType_list.Add("綜合活動2_科目成績_");
+            subjectScoreType_list.Add("綜合活動3_科目成績_");
+            subjectScoreType_list.Add("綜合活動4_科目成績_");
+            subjectScoreType_list.Add("綜合活動5_科目成績_");
+            subjectScoreType_list.Add("綜合活動6_科目成績_");
+            subjectScoreType_list.Add("藝術與人文1_科目成績_");
+            subjectScoreType_list.Add("藝術與人文2_科目成績_");
+            subjectScoreType_list.Add("藝術與人文3_科目成績_");
+            subjectScoreType_list.Add("藝術與人文4_科目成績_");
+            subjectScoreType_list.Add("藝術與人文5_科目成績_");
+            subjectScoreType_list.Add("藝術與人文6_科目成績_");
+            subjectScoreType_list.Add("自然與生活科技1_科目成績_");
+            subjectScoreType_list.Add("自然與生活科技2_科目成績_");
+            subjectScoreType_list.Add("自然與生活科技3_科目成績_");
+            subjectScoreType_list.Add("自然與生活科技4_科目成績_");
+            subjectScoreType_list.Add("自然與生活科技5_科目成績_");
+            subjectScoreType_list.Add("自然與生活科技6_科目成績_");
 
-            subjectScoreType_list.Add("科目_彈性課程1_成績_");
-            subjectScoreType_list.Add("科目_彈性課程2_成績_");
-            subjectScoreType_list.Add("科目_彈性課程3_成績_");
-            subjectScoreType_list.Add("科目_彈性課程4_成績_");
-            subjectScoreType_list.Add("科目_彈性課程5_成績_");
-            subjectScoreType_list.Add("科目_彈性課程6_成績_");
-            subjectScoreType_list.Add("科目_彈性課程7_成績_");
+            subjectScoreType_list.Add("彈性課程1_科目成績_");
+            subjectScoreType_list.Add("彈性課程2_科目成績_");
+            subjectScoreType_list.Add("彈性課程3_科目成績_");
+            subjectScoreType_list.Add("彈性課程4_科目成績_");
+            subjectScoreType_list.Add("彈性課程5_科目成績_");
+            subjectScoreType_list.Add("彈性課程6_科目成績_");
+            subjectScoreType_list.Add("彈性課程7_科目成績_");
+            subjectScoreType_list.Add("彈性課程8_科目成績_");
+            subjectScoreType_list.Add("彈性課程9_科目成績_");
+            subjectScoreType_list.Add("彈性課程10_科目成績_");
 
             #endregion
 
@@ -996,16 +1133,77 @@ namespace JHEvaluation.StudentScoreSummaryReport
             //整理科目_OO_等第
             List<string> subjectLevelType_list = new List<string>();
 
-            subjectLevelType_list.Add("科目_國語_等第_");
-            subjectLevelType_list.Add("科目_英語_等第_");
+            subjectLevelType_list.Add("語文1_科目等第_");
+            subjectLevelType_list.Add("語文2_科目等第_");
+            subjectLevelType_list.Add("語文3_科目等第_");
+            subjectLevelType_list.Add("語文4_科目等第_");
+            subjectLevelType_list.Add("語文5_科目等第_");
+            subjectLevelType_list.Add("語文6_科目等第_");
+            subjectLevelType_list.Add("數學1_科目等第_");
+            subjectLevelType_list.Add("數學2_科目等第_");
+            subjectLevelType_list.Add("數學3_科目等第_");
+            subjectLevelType_list.Add("數學4_科目等第_");
+            subjectLevelType_list.Add("數學5_科目等第_");
+            subjectLevelType_list.Add("數學6_科目等第_");
+            subjectLevelType_list.Add("自然科學1_科目等第_");
+            subjectLevelType_list.Add("自然科學2_科目等第_");
+            subjectLevelType_list.Add("自然科學3_科目等第_");
+            subjectLevelType_list.Add("自然科學4_科目等第_");
+            subjectLevelType_list.Add("自然科學5_科目等第_");
+            subjectLevelType_list.Add("自然科學6_科目等第_");
+            subjectLevelType_list.Add("科技1_科目等第_");
+            subjectLevelType_list.Add("科技2_科目等第_");
+            subjectLevelType_list.Add("科技3_科目等第_");
+            subjectLevelType_list.Add("科技4_科目等第_");
+            subjectLevelType_list.Add("科技5_科目等第_");
+            subjectLevelType_list.Add("科技6_科目等第_");
+            subjectLevelType_list.Add("社會1_科目等第_");
+            subjectLevelType_list.Add("社會2_科目等第_");
+            subjectLevelType_list.Add("社會3_科目等第_");
+            subjectLevelType_list.Add("社會4_科目等第_");
+            subjectLevelType_list.Add("社會5_科目等第_");
+            subjectLevelType_list.Add("社會6_科目等第_");
+            subjectLevelType_list.Add("藝術1_科目等第_");
+            subjectLevelType_list.Add("藝術2_科目等第_");
+            subjectLevelType_list.Add("藝術3_科目等第_");
+            subjectLevelType_list.Add("藝術4_科目等第_");
+            subjectLevelType_list.Add("藝術5_科目等第_");
+            subjectLevelType_list.Add("藝術6_科目等第_");
+            subjectLevelType_list.Add("健康與體育1_科目等第_");
+            subjectLevelType_list.Add("健康與體育2_科目等第_");
+            subjectLevelType_list.Add("健康與體育3_科目等第_");
+            subjectLevelType_list.Add("健康與體育4_科目等第_");
+            subjectLevelType_list.Add("健康與體育5_科目等第_");
+            subjectLevelType_list.Add("健康與體育6_科目等第_");
+            subjectLevelType_list.Add("綜合活動1_科目等第_");
+            subjectLevelType_list.Add("綜合活動2_科目等第_");
+            subjectLevelType_list.Add("綜合活動3_科目等第_");
+            subjectLevelType_list.Add("綜合活動4_科目等第_");
+            subjectLevelType_list.Add("綜合活動5_科目等第_");
+            subjectLevelType_list.Add("綜合活動6_科目等第_");
+            subjectLevelType_list.Add("藝術與人文1_科目等第_");
+            subjectLevelType_list.Add("藝術與人文2_科目等第_");
+            subjectLevelType_list.Add("藝術與人文3_科目等第_");
+            subjectLevelType_list.Add("藝術與人文4_科目等第_");
+            subjectLevelType_list.Add("藝術與人文5_科目等第_");
+            subjectLevelType_list.Add("藝術與人文6_科目等第_");
+            subjectLevelType_list.Add("自然與生活科技1_科目等第_");
+            subjectLevelType_list.Add("自然與生活科技2_科目等第_");
+            subjectLevelType_list.Add("自然與生活科技3_科目等第_");
+            subjectLevelType_list.Add("自然與生活科技4_科目等第_");
+            subjectLevelType_list.Add("自然與生活科技5_科目等第_");
+            subjectLevelType_list.Add("自然與生活科技6_科目等第_");
 
-            subjectLevelType_list.Add("科目_彈性課程1_等第_");
-            subjectLevelType_list.Add("科目_彈性課程2_等第_");
-            subjectLevelType_list.Add("科目_彈性課程3_等第_");
-            subjectLevelType_list.Add("科目_彈性課程4_等第_");
-            subjectLevelType_list.Add("科目_彈性課程5_等第_");
-            subjectLevelType_list.Add("科目_彈性課程6_等第_");
-            subjectLevelType_list.Add("科目_彈性課程7_等第_");
+            subjectLevelType_list.Add("彈性課程1_科目等第_");
+            subjectLevelType_list.Add("彈性課程2_科目等第_");
+            subjectLevelType_list.Add("彈性課程3_科目等第_");
+            subjectLevelType_list.Add("彈性課程4_科目等第_");
+            subjectLevelType_list.Add("彈性課程5_科目等第_");
+            subjectLevelType_list.Add("彈性課程6_科目等第_");
+            subjectLevelType_list.Add("彈性課程7_科目等第_");
+            subjectLevelType_list.Add("彈性課程8_科目等第_");
+            subjectLevelType_list.Add("彈性課程9_科目等第_");
+            subjectLevelType_list.Add("彈性課程10_科目等第_");
 
             #endregion
 
@@ -1025,8 +1223,8 @@ namespace JHEvaluation.StudentScoreSummaryReport
             Dictionary<string, string> textScore_dict = new Dictionary<string, string>();
 
             foreach (K12.Data.PeriodMappingInfo var in periodMappingInfos)
-            {                                
-                if (var.Type =="一般" & !AbsencePeriod.Contains(var.Name))
+            {
+                if (var.Type == "一般" & !AbsencePeriod.Contains(var.Name))
                     AbsencePeriod.Add(var.Name);
             }
 
@@ -1084,7 +1282,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                         {
                             table.Columns.Add(sst + i);
                         }
-                        
+
                     }
                 }
 
@@ -1098,7 +1296,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                         if (!table.Columns.Contains(slt + i))
                         {
                             table.Columns.Add(slt + i);
-                        }                        
+                        }
                     }
                 }
 
@@ -1173,7 +1371,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                         if (item.GradeYear == 1)
                         {
                             row["學年度1"] = item.SchoolYear;
-                            
+
                             //為學生的年級與學年配對
                             schoolyear_grade1 = item.SchoolYear;
 
@@ -1270,7 +1468,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                         if (item.GradeYear == 5)
                         {
                             row["學年度5"] = item.SchoolYear;
- 
+
                             //為學生的年級與學年配對
                             schoolyear_grade5 = item.SchoolYear;
 
@@ -1396,7 +1594,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                     {
                         // 一天幾節課
                         int periodsADay = AbsencePeriod.Count;
-                        
+
                         row[key] = Math.Round(arStatistic_dict_days[key] / periodsADay, 2);
                     }
                 }
@@ -1404,16 +1602,79 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
                 // 學期成績(包含領域、科目)      
 
+                //一般科目 科目名稱與科目編號對照表
+                Dictionary<string, Dictionary<string, int>> SubjectCourseDict = new Dictionary<string, Dictionary<string, int>>() {
+                    { "語文", new Dictionary<string, int>() }
+                    , {"數學", new Dictionary<string, int>() }
+                    , {"自然科學", new Dictionary<string, int>() }
+                    , {"科技", new Dictionary<string, int>() }
+                    , {"社會", new Dictionary<string, int>() }
+                    , {"藝術", new Dictionary<string, int>() }
+                    , {"健康與體育", new Dictionary<string, int>() }
+                    , {"綜合活動", new Dictionary<string, int>() }
+                    , {"藝術與人文", new Dictionary<string, int>() }
+                    , {"自然與生活科技", new Dictionary<string, int>() }
+                };
+
+                if (jssr_dict.ContainsKey(stuID))
+                {
+                    // 任一領域的科目數量是否超過
+                    bool isExceed = false;
+
+                    for (int grade = 1; grade <= 6; grade++)
+                    {
+                        foreach (JHSemesterScoreRecord jssr in jssr_dict[stuID])
+                        {
+                            if (jssr.SchoolYear == schoolyear_grade_dict[grade])
+                            {
+                                foreach (var subjectscore in jssr.Subjects)
+                                    {
+                                    // 領域為彈性課程 、或是沒有領域的科目成績 算到彈性課程科目處理
+                                    if (subjectscore.Value.Domain != "彈性課程" && subjectscore.Value.Domain != "")
+                                    {
+                                        int subjectCourseCount = SubjectCourseDict[subjectscore.Value.Domain].Count;
+
+                                        if (SubjectCourseDict[subjectscore.Value.Domain].ContainsKey(subjectscore.Value.Subject))
+                                        {
+                                            continue;
+                                        }
+
+                                        subjectCourseCount++;
+
+                                        // 目前僅支援 一個學生六學年之中同一領域僅能有 6個科目
+                                        if (subjectCourseCount > 6)
+                                        {
+                                            isExceed = true;
+                                            continue;
+                                        }
+
+                                        row[subjectscore.Value.Domain + subjectCourseCount + "_科目名稱"] = subjectscore.Value.Subject;
+
+                                        SubjectCourseDict[subjectscore.Value.Domain].Add(subjectscore.Value.Subject, subjectCourseCount);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (isExceed)
+                    {
+                        MessageBox.Show("科目數超過報表變數可支援數量，超過的將不會顯示在學籍表中");
+                    }
+                }
+
+
                 // 彈性課程 科目名稱 與彈性課程編號的對照
                 Dictionary<string, int> AlternativeCourseDict = new Dictionary<string, int>();
 
-                // 先統計 該學生 在全學年間 有的彈性課程 科目
+                // 先統計 該學生 在全學年間 有的 彈性課程科目
                 if (jssr_dict.ContainsKey(stuID))
                 {
                     // 彈性課程記數
                     int AlternativeCourse = 0;
+
                     for (int grade = 1; grade <= 6; grade++)
-                    {                        
+                    {
                         foreach (JHSemesterScoreRecord jssr in jssr_dict[stuID])
                         {
                             if (jssr.SchoolYear == schoolyear_grade_dict[grade])
@@ -1426,18 +1687,19 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                         // 對照科目名稱如果已經有，跳過
                                         if (AlternativeCourseDict.ContainsKey(subjectscore.Value.Subject))
                                         {
-                                            break;
+                                            continue;
                                         }
 
                                         AlternativeCourse++;
 
-                                        // 目前僅先支援 一個學生在六年之中有 七個 彈性課程
-                                        if (AlternativeCourse > 7)
+                                        // 目前僅先支援 一個學生在六年之中有 10個 彈性課程
+                                        if (AlternativeCourse > 10)
                                         {
+                                            MessageBox.Show("彈性科目數超過可支援數量，超過的將不會顯示在學籍表中");
                                             break;
                                         }
 
-                                        row["彈性課程" + AlternativeCourse + "_名稱"] = subjectscore.Value.Subject;
+                                        row["彈性課程" + AlternativeCourse + "_科目名稱"] = subjectscore.Value.Subject;
 
                                         AlternativeCourseDict.Add(subjectscore.Value.Subject, AlternativeCourse);
                                     }
@@ -1478,36 +1740,48 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                     {
                                         // 彈性課程記數
                                         int AlternativeCourse = 0;
-
-                                        //紀錄成績
-                                        if (subjectScore_dict.ContainsKey("科目_" + subjectscore.Value.Subject + "_成績_" + (grade * 2 - 1)))
-                                        {
-                                            subjectScore_dict["科目_" + subjectscore.Value.Subject + "_成績_" + (grade * 2 - 1)] = subjectscore.Value.Score;
-                                        }
-
-                                        //換算等第
-                                        if (subjectLevel_dict.ContainsKey("科目_" + subjectscore.Value.Subject + "_等第_" + (grade * 2 - 1)))
-                                        {
-                                            subjectLevel_dict["科目_" + subjectscore.Value.Subject + "_等第_" + (grade * 2 - 1)] = ScoreTolevel(subjectscore.Value.Score);
-                                        }
+                                        int SubjectCourseNum = 0;
 
                                         // 領域為彈性課程 、或是沒有領域的科目成績 算到彈性課程科目處理
                                         if (subjectscore.Value.Domain == "彈性課程" || subjectscore.Value.Domain == "")
                                         {
-                                            AlternativeCourse = AlternativeCourseDict[subjectscore.Value.Subject];
-
-                                            //紀錄成績
-                                            if (subjectScore_dict.ContainsKey("科目_" + "彈性課程" + AlternativeCourse + "_成績_" + (grade * 2 - 1)))
+                                            if (AlternativeCourseDict.ContainsKey(subjectscore.Value.Subject))
                                             {
+                                                AlternativeCourse = AlternativeCourseDict[subjectscore.Value.Subject];
 
-                                                subjectScore_dict["科目_" + "彈性課程" + AlternativeCourse + "_成績_" + (grade * 2 - 1)] = subjectscore.Value.Score;
+                                                //紀錄成績
+                                                if (subjectScore_dict.ContainsKey("彈性課程" + AlternativeCourse + "_科目成績_" + (grade * 2 - 1)))
+                                                {
+
+                                                    subjectScore_dict["彈性課程" + AlternativeCourse + "_科目成績_" + (grade * 2 - 1)] = subjectscore.Value.Score;
+                                                }
+
+                                                //紀錄等第
+                                                if (subjectLevel_dict.ContainsKey("彈性課程" + AlternativeCourse + "_科目等第_" + (grade * 2 - 1)))
+                                                {
+                                                    subjectLevel_dict["彈性課程" + AlternativeCourse + "_科目等第_" + (grade * 2 - 1)] = ScoreTolevel(subjectscore.Value.Score);
+                                                } 
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (SubjectCourseDict[subjectscore.Value.Domain].ContainsKey(subjectscore.Value.Subject))
+                                            {
+                                                SubjectCourseNum = SubjectCourseDict[subjectscore.Value.Domain][subjectscore.Value.Subject];
+
+                                                //紀錄成績
+                                                if (subjectScore_dict.ContainsKey(subjectscore.Value.Domain + SubjectCourseNum + "_科目成績_" + (grade * 2 - 1)))
+                                                {
+                                                    subjectScore_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目成績_" + (grade * 2 - 1)] = subjectscore.Value.Score;
+                                                }
+
+                                                //換算等第
+                                                if (subjectLevel_dict.ContainsKey(subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2 - 1)))
+                                                {
+                                                    subjectLevel_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2 - 1)] = ScoreTolevel(subjectscore.Value.Score);
+                                                } 
                                             }
 
-                                            //紀錄等第
-                                            if (subjectLevel_dict.ContainsKey("科目_" + "彈性課程" + AlternativeCourse + "_等第_" + (grade * 2 - 1)))
-                                            {
-                                                subjectLevel_dict["科目_" + "彈性課程" + AlternativeCourse + "_等第_" + (grade * 2 - 1)] = ScoreTolevel(subjectscore.Value.Score);
-                                            }
                                         }
 
                                     }
@@ -1562,32 +1836,43 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                     {
                                         // 彈性課程記數
                                         int AlternativeCourse = 0;
+                                        int SubjectCourseNum = 0;
 
-                                        //紀錄成績
-                                        if (subjectScore_dict.ContainsKey("科目_" + subjectscore.Value.Subject + "_成績_" + (grade * 2)))
-                                        {
-                                            subjectScore_dict["科目_" + subjectscore.Value.Subject + "_成績_" + (grade * 2)] = subjectscore.Value.Score;
-                                        }
-
-                                        //換算等第
-                                        if (subjectLevel_dict.ContainsKey("科目_" + subjectscore.Value.Subject + "_等第_" + (grade * 2)))
-                                        {
-                                            subjectLevel_dict["科目_" + subjectscore.Value.Subject + "_等第_" + (grade * 2)] = ScoreTolevel(subjectscore.Value.Score);
-                                        }
                                         // 領域為彈性課程 、或是沒有領域的科目成績 算到彈性課程科目處理
                                         if (subjectscore.Value.Domain == "彈性課程" || subjectscore.Value.Domain == "")
                                         {
-                                            AlternativeCourse = AlternativeCourseDict[subjectscore.Value.Subject];
-                                            //紀錄成績
-                                            if (subjectScore_dict.ContainsKey("科目_" + "彈性課程" + AlternativeCourse + "_成績_" + (grade * 2)))
+                                            if (AlternativeCourseDict.ContainsKey(subjectscore.Value.Subject))
                                             {
-                                                subjectScore_dict["科目_" + "彈性課程" + AlternativeCourse + "_成績_" + (grade * 2)] = subjectscore.Value.Score;
-                                            }
+                                                AlternativeCourse = AlternativeCourseDict[subjectscore.Value.Subject];
+                                                //紀錄成績
+                                                if (subjectScore_dict.ContainsKey("彈性課程" + AlternativeCourse + "_科目成績_" + (grade * 2)))
+                                                {
+                                                    subjectScore_dict["彈性課程" + AlternativeCourse + "_科目成績_" + (grade * 2)] = subjectscore.Value.Score;
+                                                }
 
-                                            //紀錄等第
-                                            if (subjectLevel_dict.ContainsKey("科目_" + "彈性課程" + AlternativeCourse + "_等第_" + (grade * 2)))
+                                                //紀錄等第
+                                                if (subjectLevel_dict.ContainsKey("彈性課程" + AlternativeCourse + "_科目等第_" + (grade * 2)))
+                                                {
+                                                    subjectLevel_dict["彈性課程" + AlternativeCourse + "_科目等第_" + (grade * 2)] = ScoreTolevel(subjectscore.Value.Score);
+                                                } 
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (SubjectCourseDict[subjectscore.Value.Domain].ContainsKey(subjectscore.Value.Subject))
                                             {
-                                                subjectLevel_dict["科目_" + "彈性課程" + AlternativeCourse + "_等第_" + (grade * 2)] = ScoreTolevel(subjectscore.Value.Score);
+                                                SubjectCourseNum = SubjectCourseDict[subjectscore.Value.Domain][subjectscore.Value.Subject];
+                                                //紀錄成績
+                                                if (subjectScore_dict.ContainsKey(subjectscore.Value.Domain + SubjectCourseNum + "_科目成績_" + (grade * 2)))
+                                                {
+                                                    subjectScore_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目成績_" + (grade * 2)] = subjectscore.Value.Score;
+                                                }
+
+                                                //換算等第
+                                                if (subjectLevel_dict.ContainsKey(subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2)))
+                                                {
+                                                    subjectLevel_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2)] = ScoreTolevel(subjectscore.Value.Score);
+                                                } 
                                             }
                                         }
 
@@ -1608,15 +1893,15 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
                                     //課程學習成績(包括彈性課程成績)
                                     //紀錄成績
-                                    if (domainScore_dict.ContainsKey("領域_課程學習成績_成績_" + (grade * 2 )))
+                                    if (domainScore_dict.ContainsKey("領域_課程學習成績_成績_" + (grade * 2)))
                                     {
-                                        domainScore_dict["領域_課程學習成績_成績_" + (grade * 2 )] = jssr.CourseLearnScore;
+                                        domainScore_dict["領域_課程學習成績_成績_" + (grade * 2)] = jssr.CourseLearnScore;
                                     }
 
                                     //換算等第
-                                    if (domainLevel_dict.ContainsKey("領域_課程學習成績_等第_" + (grade * 2 )))
+                                    if (domainLevel_dict.ContainsKey("領域_課程學習成績_等第_" + (grade * 2)))
                                     {
-                                        domainLevel_dict["領域_課程學習成績_等第_" + (grade * 2 )] = ScoreTolevel(jssr.CourseLearnScore);
+                                        domainLevel_dict["領域_課程學習成績_等第_" + (grade * 2)] = ScoreTolevel(jssr.CourseLearnScore);
                                     }
 
 
@@ -1669,7 +1954,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 {
                     int updateRecordCount = 1;
 
-                    urr_dict[stuID].Sort((x, y) => { return x.UpdateCode.CompareTo(y.UpdateCode); });
+                    urr_dict[stuID].Sort((x, y) => { return x.UpdateDate.CompareTo(y.UpdateDate); });
 
                     foreach (K12.Data.UpdateRecordRecord urr in urr_dict[stuID])
                     {
@@ -1686,6 +1971,19 @@ namespace JHEvaluation.StudentScoreSummaryReport
                             row["異動紀錄" + updateRecordCount + "_校名"] = ""; // 2019/03/15 怡芬說 新生異動 校名 空白
                             row["異動紀錄" + updateRecordCount + "_類別"] = "新生";
                             row["異動紀錄" + updateRecordCount + "_核准日期"] = urr.ADDate;
+                            row["異動紀錄" + updateRecordCount + "_核准文號"] = urr.ADNumber;
+
+                            updateRecordCount++;
+                        }
+
+                        // 畢業（2）
+                        if (urr.UpdateCode == "2")
+                        {
+                            row["異動紀錄" + updateRecordCount + "_日期"] = urr.UpdateDate;
+                            row["異動紀錄" + updateRecordCount + "_校名"] = "";
+                            row["異動紀錄" + updateRecordCount + "_類別"] = "畢業";
+                            row["異動紀錄" + updateRecordCount + "_核准日期"] = urr.ADDate;
+                            row["異動紀錄" + updateRecordCount + "_核准文號"] = urr.ADNumber;
 
                             updateRecordCount++;
                         }
@@ -1695,8 +1993,71 @@ namespace JHEvaluation.StudentScoreSummaryReport
                         {
                             row["異動紀錄" + updateRecordCount + "_日期"] = urr.UpdateDate;
                             row["異動紀錄" + updateRecordCount + "_校名"] = urr.Attributes["ImportExportSchool"]; // 取得異動校名的方法
-                            row["異動紀錄" + updateRecordCount + "_類別"] = urr.UpdateCode =="3"? "轉入" : "轉出";
-                            row["異動紀錄" + updateRecordCount + "_核准日期"] = urr.ADDate;                            
+                            row["異動紀錄" + updateRecordCount + "_類別"] = urr.UpdateCode == "3" ? "轉入" : "轉出";
+                            row["異動紀錄" + updateRecordCount + "_核准日期"] = urr.ADDate;
+                            row["異動紀錄" + updateRecordCount + "_核准文號"] = urr.ADNumber;
+                            updateRecordCount++;
+                        }
+
+                        //因為無法新增休學（5）及續讀（8）這兩種異動，所以這邊先不處理這兩種異動
+
+                        // 復學（6）
+                        if (urr.UpdateCode == "6")
+                        {
+                            row["異動紀錄" + updateRecordCount + "_日期"] = urr.UpdateDate;
+                            row["異動紀錄" + updateRecordCount + "_校名"] = "";
+                            row["異動紀錄" + updateRecordCount + "_類別"] = "復學";
+                            row["異動紀錄" + updateRecordCount + "_核准日期"] = urr.ADDate;
+                            row["異動紀錄" + updateRecordCount + "_核准文號"] = urr.ADNumber;
+
+                            updateRecordCount++;
+                        }
+
+                        // 中輟（7）
+                        if (urr.UpdateCode == "7")
+                        {
+                            row["異動紀錄" + updateRecordCount + "_日期"] = urr.UpdateDate;
+                            row["異動紀錄" + updateRecordCount + "_校名"] = "";
+                            row["異動紀錄" + updateRecordCount + "_類別"] = "中輟";
+                            row["異動紀錄" + updateRecordCount + "_核准日期"] = urr.ADDate;
+                            row["異動紀錄" + updateRecordCount + "_核准文號"] = urr.ADNumber;
+
+                            updateRecordCount++;
+                        }
+
+                        // 更正學籍（9）
+                        if (urr.UpdateCode == "9")
+                        {
+                            row["異動紀錄" + updateRecordCount + "_日期"] = urr.UpdateDate;
+                            row["異動紀錄" + updateRecordCount + "_校名"] = "";
+                            row["異動紀錄" + updateRecordCount + "_類別"] = "更正學籍";
+                            row["異動紀錄" + updateRecordCount + "_核准日期"] = urr.ADDate;
+                            row["異動紀錄" + updateRecordCount + "_核准文號"] = urr.ADNumber;
+
+                            updateRecordCount++;
+                        }
+
+                        // 延長修業年限（10）
+                        if (urr.UpdateCode == "10")
+                        {
+                            row["異動紀錄" + updateRecordCount + "_日期"] = urr.UpdateDate;
+                            row["異動紀錄" + updateRecordCount + "_校名"] = "";
+                            row["異動紀錄" + updateRecordCount + "_類別"] = "延長修業年限";
+                            row["異動紀錄" + updateRecordCount + "_核准日期"] = urr.ADDate;
+                            row["異動紀錄" + updateRecordCount + "_核准文號"] = urr.ADNumber;
+
+                            updateRecordCount++;
+                        }
+
+                        // 死亡（11）
+                        if (urr.UpdateCode == "11")
+                        {
+                            row["異動紀錄" + updateRecordCount + "_日期"] = urr.UpdateDate;
+                            row["異動紀錄" + updateRecordCount + "_校名"] = "";
+                            row["異動紀錄" + updateRecordCount + "_類別"] = "死亡";
+                            row["異動紀錄" + updateRecordCount + "_核准日期"] = urr.ADDate;
+                            row["異動紀錄" + updateRecordCount + "_核准文號"] = urr.ADNumber;
+
                             updateRecordCount++;
                         }
                     }

@@ -1,0 +1,13 @@
+C:\Users\user\source\repos\Git\PSEvaluation\KaoHsiungJHEvaluation\KaoHsiung.StudentRecordReport\KaoHsiung.StudentRecordReport\bin\Debug\KaoHsiung.StudentRecordReport.dll
+C:\Users\user\source\repos\Git\PSEvaluation\KaoHsiungJHEvaluation\KaoHsiung.StudentRecordReport\KaoHsiung.StudentRecordReport\bin\Debug\KaoHsiung.StudentRecordReport.pdb
+C:\Users\user\source\repos\Git\PSEvaluation\KaoHsiungJHEvaluation\KaoHsiung.StudentRecordReport\KaoHsiung.StudentRecordReport\bin\Debug\DevComponents.DotNetBar2.dll
+C:\Users\user\source\repos\Git\PSEvaluation\KaoHsiungJHEvaluation\KaoHsiung.StudentRecordReport\KaoHsiung.StudentRecordReport\obj\Debug\KaoHsiung.StudentRecordReport.csprojAssemblyReference.cache
+C:\Users\user\source\repos\Git\PSEvaluation\KaoHsiungJHEvaluation\KaoHsiung.StudentRecordReport\KaoHsiung.StudentRecordReport\obj\Debug\KaoHsiung.StudentRecordReport.Forms.PrintConfigForm.resources
+C:\Users\user\source\repos\Git\PSEvaluation\KaoHsiungJHEvaluation\KaoHsiung.StudentRecordReport\KaoHsiung.StudentRecordReport\obj\Debug\KaoHsiung.StudentRecordReport.Properties.Resources.resources
+C:\Users\user\source\repos\Git\PSEvaluation\KaoHsiungJHEvaluation\KaoHsiung.StudentRecordReport\KaoHsiung.StudentRecordReport\obj\Debug\KaoHsiung.StudentRecordReport.Forms.SelectTypeForm.resources
+C:\Users\user\source\repos\Git\PSEvaluation\KaoHsiungJHEvaluation\KaoHsiung.StudentRecordReport\KaoHsiung.StudentRecordReport\obj\Debug\KaoHsiung.StudentRecordReport.MainForm.resources
+C:\Users\user\source\repos\Git\PSEvaluation\KaoHsiungJHEvaluation\KaoHsiung.StudentRecordReport\KaoHsiung.StudentRecordReport\obj\Debug\KaoHsiung.StudentRecordReport.csproj.GenerateResource.cache
+C:\Users\user\source\repos\Git\PSEvaluation\KaoHsiungJHEvaluation\KaoHsiung.StudentRecordReport\KaoHsiung.StudentRecordReport\obj\Debug\KaoHsiung.StudentRecordReport.csproj.CoreCompileInputs.cache
+C:\Users\user\source\repos\Git\PSEvaluation\KaoHsiungJHEvaluation\KaoHsiung.StudentRecordReport\KaoHsiung.StudentRecordReport\obj\Debug\KaoHsiung.StudentRecordReport.csproj.CopyComplete
+C:\Users\user\source\repos\Git\PSEvaluation\KaoHsiungJHEvaluation\KaoHsiung.StudentRecordReport\KaoHsiung.StudentRecordReport\obj\Debug\KaoHsiung.StudentRecordReport.dll
+C:\Users\user\source\repos\Git\PSEvaluation\KaoHsiungJHEvaluation\KaoHsiung.StudentRecordReport\KaoHsiung.StudentRecordReport\obj\Debug\KaoHsiung.StudentRecordReport.pdb

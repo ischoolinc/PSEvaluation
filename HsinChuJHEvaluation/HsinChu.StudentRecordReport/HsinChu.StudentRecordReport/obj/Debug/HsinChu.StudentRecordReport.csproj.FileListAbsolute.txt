@@ -1,0 +1,14 @@
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\bin\Debug\HsinChu.StudentRecordReport.dll
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\bin\Debug\HsinChu.StudentRecordReport.pdb
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\bin\Debug\DevComponents.DotNetBar2.dll
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\bin\Debug\DevComponents.DotNetBar2.xml
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\obj\Debug\HsinChu.StudentRecordReport.csprojAssemblyReference.cache
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\obj\Debug\HsinChu.StudentRecordReport.ConfigForms.PrintConfigForm.resources
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\obj\Debug\HsinChu.StudentRecordReport.Properties.Resources.resources
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\obj\Debug\HsinChu.StudentRecordReport.ConfigForms.SelectTypeForm.resources
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\obj\Debug\HsinChu.StudentRecordReport.MainForm.resources
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\obj\Debug\HsinChu.StudentRecordReport.csproj.GenerateResource.cache
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\obj\Debug\HsinChu.StudentRecordReport.csproj.CoreCompileInputs.cache
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\obj\Debug\HsinChu.StudentRecordReport.csproj.CopyComplete
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\obj\Debug\HsinChu.StudentRecordReport.dll
+C:\Users\user\source\repos\Git\PSEvaluation\HsinChuJHEvaluation\HsinChu.StudentRecordReport\HsinChu.StudentRecordReport\obj\Debug\HsinChu.StudentRecordReport.pdb

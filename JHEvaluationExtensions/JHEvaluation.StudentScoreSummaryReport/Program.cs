@@ -54,7 +54,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
             //註冊權限管理項目。
             Catalog detail = RoleAclSource.Instance["學生"]["報表"];
 
-            detail.Add(new ReportFeature(PermissionCode_SutdentReport, "學籍表"));
+          detail.Add(new ReportFeature(PermissionCode_SutdentReport, "學籍表"));
             detail.Add(new ReportFeature(PermissionCode, "在校成績證明書"));
             detail.Add(new ReportFeature(PermissionCodeEnglish, "在校成績證明書(英文)"));
 
