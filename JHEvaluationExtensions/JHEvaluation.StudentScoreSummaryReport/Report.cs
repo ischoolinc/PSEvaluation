@@ -5,6 +5,7 @@ using JHEvaluation.ScoreCalculation;
 using Aspose.Words;
 using System.IO;
 using Aspose.Words.Reporting;
+using Aspose.Words.Tables;
 using JHEvaluation.ScoreCalculation.ScoreStruct;
 using Campus.Rating;
 using System.Xml;
@@ -14,13 +15,13 @@ namespace JHEvaluation.StudentScoreSummaryReport
 {
     internal class Report
     {
-        private ReportPreference PrintSetting { get; set; }
+        private static ReportPreference PrintSetting { get; set; }
 
         private List<ReportStudent> Students { get; set; }
 
-        private Dictionary<string, List<string>> PrintAbsences { get; set; }
+        private static Dictionary<string, List<string>> PrintAbsences { get; set; }
 
-        private List<string> DetailDomain { get; set; }
+        private static List<string> DetailDomain { get; set; }
 
         private const string LearningDomainName = "學習領域";
 
@@ -59,7 +60,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
         {
             Document doc = PrintSetting.Template.ToDocument();
 
-            doc.MailMerge.MergeField += new Aspose.Words.Reporting.MergeFieldEventHandler(MailMerge_MergeField);
+            doc.MailMerge.FieldMergingCallback = new MailMerge_MergeField();
 
             doc.MailMerge.Execute(new MergeDataSource(Students, PrintSetting));
 
@@ -67,104 +68,435 @@ namespace JHEvaluation.StudentScoreSummaryReport
         }
 
         //最好這程式有人能維護的了.......
-        private void MailMerge_MergeField(object sender, MergeFieldEventArgs e)
+        class MailMerge_MergeField : IFieldMergingCallback
         {
-            //不是 Fix 開頭的合併欄位不處理。
-            if (!e.FieldName.ToUpper().StartsWith("Fix".ToUpper())) return;
-
-            DocumentBuilder builder = new DocumentBuilder(e.Document);
-
-            ReportStudent student = e.FieldValue as ReportStudent;
-
-            //如果合併值不是 ReportStudent 就跳過...意思是有問題...。
-            if (student == null) return;
-
-            builder.MoveToField(e.Field, true);
-            e.Field.Remove();
-
-            if (e.FieldName == "Fix:年級學期")
+            void IFieldMergingCallback.FieldMerging(FieldMergingArgs e)
             {
-                #region 列印年級學期資訊(有點複雜)。
-                SemesterDataCollection semesters = student.SHistory.GetGradeYearSemester().GetSemesters(PrintSetting.PrintSemesters);
-                Row SemesterRow = builder.CurrentParagraph.ParentNode.ParentNode.NextSibling as Row; //下一個 Row。
-                Paragraph originParagraph = builder.CurrentParagraph;
+                //不是 Fix 開頭的合併欄位不處理。
+                if (!e.FieldName.ToUpper().StartsWith("Fix".ToUpper())) return;
 
-                int count = 0, offset = 1;
+                DocumentBuilder builder = new DocumentBuilder(e.Document);
 
-                foreach (SemesterData each in semesters)
+                ReportStudent student = e.FieldValue as ReportStudent;
+
+                //如果合併值不是 ReportStudent 就跳過...意思是有問題...。
+                if (student == null) return;
+
+                builder.MoveToField(e.Field, true);
+                e.Field.Remove();
+
+                if (e.FieldName == "Fix:年級學期")
                 {
-                    string currentGradeyear = Util.GetGradeyearString(each.GradeYear.ToString());
+                    #region 列印年級學期資訊(有點複雜)。
+                    SemesterDataCollection semesters = student.SHistory.GetGradeYearSemester().GetSemesters(PrintSetting.PrintSemesters);
+                    Row SemesterRow = builder.CurrentParagraph.ParentNode.ParentNode.NextSibling as Row; //下一個 Row。
+                    Paragraph originParagraph = builder.CurrentParagraph;
 
-                    //如果沒有年級，就跳過。
-                    if (string.IsNullOrEmpty(currentGradeyear)) continue;
+                    int count = 0, offset = 1;
 
-                    builder.Write(currentGradeyear + "年級");
-                    Paragraph nextPh = Util.NextCell(builder.CurrentParagraph);
-                    if (nextPh == null) break; //沒有下一個 Cell ，就不印資料了。
-                    builder.MoveTo(nextPh);
-
-                    Paragraph resetParagraph = builder.CurrentParagraph;
-                    SemesterRow.Cells[count + offset].Write(builder, GetSemesterString(each));
-
-                    SemesterData semester = new SemesterData(0, each.SchoolYear, each.Semester);
-                    if (!student.HeaderList.ContainsKey(semester))
-                        student.HeaderList.AddRaw(each, count); //不要懷疑，這是對的。
-
-                    builder.MoveTo(resetParagraph);
-                    count++;
-                }
-
-                builder.MoveTo(originParagraph);
-                (originParagraph.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.First;
-                Paragraph nextParagrap = originParagraph;
-                string previousGradeyear = GetText(originParagraph);
-                while ((nextParagrap = Util.NextCell(nextParagrap)) != null)
-                {
-                    if (GetText(nextParagrap) == previousGradeyear && !string.IsNullOrEmpty(previousGradeyear))
+                    foreach (SemesterData each in semesters)
                     {
-                        (nextParagrap.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.Previous;
-                        (nextParagrap.ParentNode as Cell).Paragraphs[0].Runs.Clear();
+                        string currentGradeyear = Util.GetGradeyearString(each.GradeYear.ToString());
+
+                        //如果沒有年級，就跳過。
+                        if (string.IsNullOrEmpty(currentGradeyear)) continue;
+
+                        builder.Write(currentGradeyear + "年級");
+                        Paragraph nextPh = Util.NextCell(builder.CurrentParagraph);
+                        if (nextPh == null) break; //沒有下一個 Cell ，就不印資料了。
+                        builder.MoveTo(nextPh);
+
+                        Paragraph resetParagraph = builder.CurrentParagraph;
+                        SemesterRow.Cells[count + offset].Write(builder, GetSemesterString(each));
+
+                        SemesterData semester = new SemesterData(0, each.SchoolYear, each.Semester);
+                        if (!student.HeaderList.ContainsKey(semester))
+                            student.HeaderList.AddRaw(each, count); //不要懷疑，這是對的。
+
+                        builder.MoveTo(resetParagraph);
+                        count++;
                     }
-                    else
-                        (nextParagrap.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.First;
 
-                    previousGradeyear = GetText(nextParagrap);
-                }
-                #endregion
-            }
-            else if (e.FieldName == "Fix:科目資訊")
-            {
-                #region 列印科目資料(爆炸複雜)
-
-                Row template = builder.CurrentParagraph.ParentNode.ParentNode as Row;
-                Table table = template.ParentNode as Table;
-
-                if (PrintSetting.ListMethod == ListMethod.DomainOnly)
-                {
-                    #region 列印領域
-                    UniqueSet<RowHeader> RowIndexs = new UniqueSet<RowHeader>();
-                    //Environment.OSVersion.Platform
-                    #region 列印 RowHeader
-                    foreach (SemesterData semester in student.SHistory.GetGradeYearSemester().GetSemesters(PrintSetting.PrintSemesters))
+                    builder.MoveTo(originParagraph);
+                    (originParagraph.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.First;
+                    Paragraph nextParagrap = originParagraph;
+                    string previousGradeyear = GetText(originParagraph);
+                    while ((nextParagrap = Util.NextCell(nextParagrap)) != null)
                     {
-                        SemesterData sysems = new SemesterData(0, semester.SchoolYear, semester.Semester);
-
-                        //如果不包含該學期成績資料，就跳過。
-                        if (!student.SemestersScore.Contains(sysems)) continue;
-
-                        SemesterScore semsscore = student.SemestersScore[sysems];                      
-
-                        //準備彈性課程的科目(要詳列出來)。
-                        foreach(string strDomain in DetailDomain)
-                        foreach (string strSubject in semsscore.Subject)
+                        if (GetText(nextParagrap) == previousGradeyear && !string.IsNullOrEmpty(previousGradeyear))
                         {
-                            SemesterSubjectScore subject = semsscore.Subject[strSubject];
+                            (nextParagrap.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.Previous;
+                            (nextParagrap.ParentNode as Cell).Paragraphs[0].Runs.Clear();
+                        }
+                        else
+                            (nextParagrap.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.First;
 
-                            if (subject.Domain==strDomain)
+                        previousGradeyear = GetText(nextParagrap);
+                    }
+                    #endregion
+                }
+                else if (e.FieldName == "Fix:科目資訊")
+                {
+                    #region 列印科目資料(爆炸複雜)
+
+                    Row template = builder.CurrentParagraph.ParentNode.ParentNode as Row;
+                    Table table = template.ParentNode as Table;
+
+                    if (PrintSetting.ListMethod == ListMethod.DomainOnly)
+                    {
+                        #region 列印領域
+                        UniqueSet<RowHeader> RowIndexs = new UniqueSet<RowHeader>();
+                        //Environment.OSVersion.Platform
+                        #region 列印 RowHeader
+                        foreach (SemesterData semester in student.SHistory.GetGradeYearSemester().GetSemesters(PrintSetting.PrintSemesters))
+                        {
+                            SemesterData sysems = new SemesterData(0, semester.SchoolYear, semester.Semester);
+
+                            //如果不包含該學期成績資料，就跳過。
+                            if (!student.SemestersScore.Contains(sysems)) continue;
+
+                            SemesterScore semsscore = student.SemestersScore[sysems];
+
+                            //準備彈性課程的科目(要詳列出來)。
+                            foreach (string strDomain in DetailDomain)
+                                foreach (string strSubject in semsscore.Subject)
+                                {
+                                    SemesterSubjectScore subject = semsscore.Subject[strSubject];
+
+                                    if (subject.Domain == strDomain)
+                                    {
+                                        RefineDomain(subject);
+
+                                        RowHeader header = new RowHeader(subject.Domain, strSubject);
+                                        header.IsDomain = false;
+
+                                        if (!RowIndexs.Contains(header))
+                                            RowIndexs.Add(header);
+                                    }
+                                }
+
+                            //準備領域資料。
+                            foreach (string strDomain in semsscore.Domain)
                             {
-                                RefineDomain(subject);
+                                if (!Subj.Domains.Contains(strDomain)) continue;
 
-                                RowHeader header = new RowHeader(subject.Domain, strSubject);
+                                SemesterDomainScore domain = semsscore.Domain[strDomain];
+
+                                if (strDomain != "" || strDomain != "彈性課程")
+                                {
+                                    RowHeader header = new RowHeader(strDomain, string.Empty);
+                                    header.IsDomain = true;
+
+                                    if (!RowIndexs.Contains(header))
+                                        RowIndexs.Add(header);
+                                }
+                            }
+                        }
+
+                        RowHeader lheader = new RowHeader(LearningDomainName, string.Empty);
+                        lheader.IsDomain = true;
+                        RowIndexs.Add(lheader);
+
+                        List<RowHeader> sortedHeaders = SortHeader(RowIndexs.ToList());
+
+                        if (Program.Mode == ModuleMode.HsinChu)
+                        {
+                            // 新竹板移除語文
+                            int rmIdx = -1, idx = 0; ;
+                            foreach (RowHeader rh in sortedHeaders)
+                            {
+                                if (rh.Domain == "語文" && rh.IsDomain == true && rh.Subject == "")
+                                    rmIdx = idx;
+                                idx++;
+                            }
+                            if (rmIdx > 0)
+                                sortedHeaders.RemoveAt(rmIdx);
+                        }
+
+                        //產生 Row。
+                        List<RowHeader> indexHeaders = new List<RowHeader>();
+                        Row current = template;
+                        int rowIndex = 0;
+                        foreach (RowHeader header in sortedHeaders)
+                        {
+                            RowHeader indexH = header;
+                            indexH.Index = rowIndex++;
+                            indexHeaders.Add(indexH);
+                            bool hasGroup = !string.IsNullOrEmpty(Subj.GetDomainGroup(header.Domain));
+                            string groupName = Subj.GetDomainGroup(header.Domain);
+
+                            Row datarow = table.InsertBefore(template.Clone(true), current) as Row;
+
+                            if (header.Domain == LearningDomainName)
+                            {
+                                string headerName = string.Empty;
+
+                                if (PrintSetting.PrintRank)
+                                    headerName = "學習領域排名";
+
+                                if (PrintSetting.PrintRankPercentage)
+                                    headerName = "學習領域百分比";
+
+                                if (PrintSetting.PrintRank && PrintSetting.PrintRankPercentage)
+                                    headerName = "學習領域排名/百分比";
+
+                                if (PrintSetting.PrintRank || PrintSetting.PrintRankPercentage)
+                                {
+                                    Row lrow = table.InsertAfter(template.Clone(true), datarow) as Row;
+                                    lrow.Cells[0].Write(builder, headerName);
+                                    rowIndex++;
+                                }
+                            }
+
+                            if (header.IsDomain)
+                            {
+                                if (hasGroup)
+                                {
+                                    datarow.Cells[0].Write(builder, groupName);
+                                    datarow.Cells[1].Write(builder, header.Domain);
+                                }
+                                else
+                                    datarow.Cells[0].Write(builder, header.Domain);
+                            }
+                            else
+                            {
+                                //把空白的領域當成「彈性課程」。
+                                string domain = IsFlexible(header.Domain) ? "彈性課程" : header.Domain;
+                                datarow.Cells[0].Write(builder, domain);
+                                datarow.Cells[1].Write(builder, header.Subject);
+                            }
+                        }
+                        #endregion
+
+                        #region 填資料
+                        Row RatingRow = null;
+                        foreach (RowHeader header in indexHeaders)
+                        {
+                            SemesterDataCollection semesters = new SemesterDataCollection();
+                            Row row = table.Rows[header.Index + 3];
+                            foreach (SemesterData semester in student.SHistory.GetGradeYearSemester().GetSemesters(PrintSetting.PrintSemesters))
+                            {
+                                SemesterData sysems = new SemesterData(0, semester.SchoolYear, semester.Semester);
+                                semesters.Add(sysems);
+
+                                if (!student.SemestersScore.Contains(sysems)) continue;
+                                if (!student.HeaderList.ContainsKey(sysems)) continue;
+
+                                int columnIndex = student.HeaderList[sysems];
+                                SemesterScore semsscore = student.SemestersScore[sysems];
+
+                                decimal? score = null;
+                                decimal? weight = null;
+
+                                if (header.IsDomain)
+                                {
+                                    if (semsscore.Domain.Contains(header.Domain))
+                                    {
+                                        score = semsscore.Domain[header.Domain].Value;
+                                        weight = semsscore.Domain[header.Domain].Weight;
+                                    }
+                                }
+                                else
+                                {
+                                    if (semsscore.Subject.Contains(header.Subject))
+                                    {
+                                        // 因為會有相同科目分屬不同領域，在判斷上需要加入領域判斷
+                                        string strDomain = semsscore.Subject[header.Subject].Domain;
+
+                                        if (header.Domain == strDomain)
+                                        {
+                                            score = semsscore.Subject[header.Subject].Value;
+                                            weight = semsscore.Subject[header.Subject].Weight;
+                                        }
+
+                                        //score = semsscore.Subject[header.Subject].Value;
+                                        //weight = semsscore.Subject[header.Subject].Weight;
+                                    }
+                                }
+
+                                if (header.Domain == LearningDomainName)
+                                {
+                                    score = semsscore.LearnDomainScore;
+
+                                    row.Cells[columnIndex * 3 + 2].CellFormat.FitText = false;
+                                    row.Cells[columnIndex * 3 + 2].CellFormat.HorizontalMerge = CellMerge.First;
+                                    row.Cells[columnIndex * 3 + 3].CellFormat.HorizontalMerge = CellMerge.Previous;
+
+                                    if (!score.HasValue) continue;
+
+                                    row.Cells[columnIndex * 3 + 2].Write(builder, ((double)score) + "");
+                                    row.Cells[columnIndex * 3 + 4].Write(builder, (Util.GetDegree(score.Value)));
+
+                                    if (PrintSetting.PrintRank || PrintSetting.PrintRankPercentage)
+                                        RatingRow = row.NextSibling as Row;
+                                }
+                                else
+                                {
+                                    if (!score.HasValue) continue;
+                                    if (!weight.HasValue) weight = 0;
+
+                                    row.Cells[columnIndex * 3 + 2].Write(builder, ((double)weight) + "");
+                                    row.Cells[columnIndex * 3 + 3].Write(builder, ((double)score) + "");
+                                    row.Cells[columnIndex * 3 + 4].Write(builder, (Util.GetDegree(score.Value)));
+                                }
+                            }
+
+                            //算平均...
+                            decimal? avgScore = null;
+                            if (header.IsDomain)
+                            {
+                                if (header.Domain == LearningDomainName)
+                                {
+                                    avgScore = student.SemestersScore.AvgLearningDomainScore(semesters);
+
+                                    if (!avgScore.HasValue) continue;
+
+                                    if (student.CalculationRule == null)
+                                        avgScore = Math.Round(avgScore.Value, 2, MidpointRounding.AwayFromZero);
+                                    else
+                                        avgScore = student.CalculationRule.ParseLearnDomainScore(avgScore.Value);
+                                }
+                                else
+                                {
+                                    avgScore = student.SemestersScore.AvgDomainScore(semesters, header.Domain);
+
+                                    if (!avgScore.HasValue) continue;
+
+                                    if (student.CalculationRule == null)
+                                        avgScore = Math.Round(avgScore.Value, 2, MidpointRounding.AwayFromZero);
+                                    else
+                                        avgScore = student.CalculationRule.ParseDomainScore(avgScore.Value);
+                                }
+                            }
+                            else
+                            {
+                                avgScore = student.SemestersScore.AvgSubjectScore(semesters, header.Subject);
+
+                                if (!avgScore.HasValue) continue;
+
+                                if (student.CalculationRule == null)
+                                    avgScore = Math.Round(avgScore.Value, 2, MidpointRounding.AwayFromZero);
+                                else
+                                    avgScore = student.CalculationRule.ParseSubjectScore(avgScore.Value);
+                            }
+
+                            //row.Cells[20].Write(builder, (double)avgScore + "");
+                            //row.Cells[21].Write(builder, Util.GetDegree(avgScore.Value));
+
+                            // 2017/11/23 穎驊修正，加入四~六年級 填表位置修正
+                            row.Cells[38].Write(builder, (double)avgScore + "");
+                            row.Cells[39].Write(builder, Util.GetDegree(avgScore.Value));
+                        }
+
+                        if (RatingRow != null)
+                        {
+                            PlaceCollection places = student.Places.NS("年排名");
+
+                            foreach (SemesterData semsIndex in student.HeaderList.Keys)
+                            {
+                                SemesterData raw = student.HeaderList.GetSRaw(semsIndex);
+
+                                if (raw == SemesterData.Empty) continue;
+
+                                string placeKey = SLearningDomainParser.GetSemesterString(raw);
+
+                                Cell datacell = RatingRow.Cells[student.HeaderList[semsIndex] * 3 + 2];
+
+                                if (places.Contains(placeKey))
+                                    datacell.Write(builder, GetPlaceString(places, placeKey));
+                            }
+
+                            if (places.Contains(LearningDomainName))
+                                RatingRow.Cells[20].Write(builder, GetPlaceString(places, LearningDomainName));
+                        }
+                        #endregion
+
+                        #region 合併相關欄位。
+                        string previousCellDomain = string.Empty;
+                        foreach (RowHeader header in indexHeaders)
+                        {
+                            bool hasGroup = !string.IsNullOrEmpty(Subj.GetDomainGroup(header.Domain));
+                            string groupName = Subj.GetDomainGroup(header.Domain);
+
+                            Row row = table.Rows[header.Index + 3];
+
+                            if (previousCellDomain == row.Cells[0].ToTxt())
+                                row.Cells[0].CellFormat.VerticalMerge = CellMerge.Previous;
+                            else
+                                row.Cells[0].CellFormat.VerticalMerge = CellMerge.First;
+
+                            if (header.IsDomain)
+                            {
+                                if (header.Domain == LearningDomainName)
+                                {
+                                    #region 學習領域
+                                    row.Cells[0].CellFormat.FitText = false;
+                                    row.Cells[0].CellFormat.HorizontalMerge = CellMerge.First;
+                                    row.Cells[1].CellFormat.HorizontalMerge = CellMerge.Previous;
+
+                                    if (PrintSetting.PrintRank || PrintSetting.PrintRankPercentage)
+                                    {
+                                        Row lrow = row.NextSibling as Row;
+                                        lrow.Cells[0].CellFormat.HorizontalMerge = CellMerge.First;
+                                        lrow.Cells[0].CellFormat.FitText = false;
+                                        lrow.Cells[1].CellFormat.HorizontalMerge = CellMerge.Previous;
+                                        Paragraph mp = lrow.Cells[2].Paragraphs[0];
+                                        for (int i = 0; i < (3 * 6); i++)
+                                        {
+                                            if (i % 3 == 0)
+                                            {
+                                                (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.First;
+                                                (mp.ParentNode as Cell).CellFormat.FitText = false;
+                                            }
+                                            else
+                                                (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.Previous;
+
+                                            mp = Util.NextCell(mp as Paragraph);
+                                        }
+                                        (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.First;
+                                        mp = Util.NextCell(mp as Paragraph);
+                                        (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.Previous;
+                                    }
+                                    #endregion
+                                }
+                                else
+                                {
+                                    if (!hasGroup)
+                                    {
+                                        row.Cells[0].CellFormat.HorizontalMerge = CellMerge.First;
+                                        row.Cells[1].CellFormat.HorizontalMerge = CellMerge.Previous;
+                                    }
+                                }
+                            }
+
+                            previousCellDomain = row.Cells[0].ToTxt();
+                        }
+                        #endregion
+
+                        #endregion
+                    }
+                    else if (PrintSetting.ListMethod == ListMethod.SubjectOnly)
+                    {
+                        #region 列印科目
+                        UniqueSet<RowHeader> RowIndexs = new UniqueSet<RowHeader>();
+
+                        foreach (SemesterData semester in student.SHistory.GetGradeYearSemester().GetSemesters(PrintSetting.PrintSemesters))
+                        {
+                            SemesterData sysems = new SemesterData(0, semester.SchoolYear, semester.Semester);
+                            if (!student.SemestersScore.Contains(sysems)) continue;
+
+                            SemesterScore semsscore = student.SemestersScore[sysems];
+
+                            foreach (string strSubject in semsscore.Subject)
+                            {
+                                SemesterSubjectScore subject = semsscore.Subject[strSubject];
+
+                                RowHeader header;
+                                if (IsFlexible(subject.Domain))
+                                    header = new RowHeader("彈性課程", strSubject);
+                                else
+                                    header = new RowHeader(subject.Domain, strSubject);
+
                                 header.IsDomain = false;
 
                                 if (!RowIndexs.Contains(header))
@@ -172,718 +504,395 @@ namespace JHEvaluation.StudentScoreSummaryReport
                             }
                         }
 
-                        //準備領域資料。
-                        foreach (string strDomain in semsscore.Domain)
+                        RowHeader lheader = new RowHeader(LearningDomainName, string.Empty);
+                        lheader.IsDomain = true;
+                        //RowIndexs.Add(lheader);
+
+                        //List<RowHeader> sortedHeaders = SortHeader(RowIndexs.ToList());
+                        List<RowHeader> sortedHeaders = RowIndexs.ToList();
+
+                        sortedHeaders.Sort(delegate (RowHeader x, RowHeader y)
                         {
-                            if (!Subj.Domains.Contains(strDomain)) continue;
+                            Subj xx = new JHSchool.Evaluation.Subject(x.Subject, x.Domain);
+                            Subj yy = new JHSchool.Evaluation.Subject(y.Subject, y.Domain);
 
-                            SemesterDomainScore domain = semsscore.Domain[strDomain];
-                                                        
-                            if (strDomain != "" || strDomain != "彈性課程")  
-                            {                          
-                                RowHeader header = new RowHeader(strDomain, string.Empty);
-                                header.IsDomain = true;
+                            return xx.CompareTo(yy);
+                        });
+                        //sortedHeaders.Sort(Util.SortSubject);
+                        //sortedHeaders.Sort(Util.SortDomain);
 
-                                if (!RowIndexs.Contains(header))
-                                    RowIndexs.Add(header);
+                        //把學習領域放在正確的地方。
+                        foreach (RowHeader eachHeader in sortedHeaders.ToArray())
+                        {
+                            if (IsFlexible(eachHeader.Domain))
+                            {
+                                int index = sortedHeaders.IndexOf(eachHeader);
+                                sortedHeaders.Insert(index, lheader);
+                                break;
                             }
                         }
-                    }
+                        if (sortedHeaders.IndexOf(lheader) < 0)
+                            sortedHeaders.Add(lheader);
 
-                    RowHeader lheader = new RowHeader(LearningDomainName, string.Empty);
-                    lheader.IsDomain = true;
-                    RowIndexs.Add(lheader);
-
-                    List<RowHeader> sortedHeaders = SortHeader(RowIndexs.ToList());
-
-                    if(Program.Mode == ModuleMode.HsinChu)
-                    {
-                        // 新竹板移除語文
-                        int rmIdx = -1, idx = 0; ;
-                        foreach (RowHeader rh in sortedHeaders)
+                        //產生 Row。
+                        List<RowHeader> indexHeaders = new List<RowHeader>();
+                        Row current = template;
+                        int rowIndex = 0;
+                        foreach (RowHeader header in sortedHeaders)
                         {
-                            if (rh.Domain == "語文" && rh.IsDomain == true && rh.Subject == "")
-                                rmIdx = idx;
-                            idx++;
-                        }
-                        if (rmIdx > 0)
-                            sortedHeaders.RemoveAt(rmIdx);
-                    }
+                            RowHeader indexH = header;
+                            indexH.Index = rowIndex++;
+                            indexHeaders.Add(indexH);
 
-                    //產生 Row。
-                    List<RowHeader> indexHeaders = new List<RowHeader>();
-                    Row current = template;
-                    int rowIndex = 0;
-                    foreach (RowHeader header in sortedHeaders)
-                    {
-                        RowHeader indexH = header;
-                        indexH.Index = rowIndex++;
-                        indexHeaders.Add(indexH);
-                        bool hasGroup = !string.IsNullOrEmpty(Subj.GetDomainGroup(header.Domain));
-                        string groupName = Subj.GetDomainGroup(header.Domain);
+                            Row datarow = table.InsertBefore(template.Clone(true), current) as Row;
 
-                        Row datarow = table.InsertBefore(template.Clone(true), current) as Row;
-
-                        if (header.Domain == LearningDomainName)
-                        {
-                            string headerName = string.Empty;
-
-                            if (PrintSetting.PrintRank)
-                                headerName = "學習領域排名";
-
-                            if (PrintSetting.PrintRankPercentage)
-                                headerName = "學習領域百分比";
-
-                            if (PrintSetting.PrintRank && PrintSetting.PrintRankPercentage)
-                                headerName = "學習領域排名/百分比";
-
-                            if (PrintSetting.PrintRank || PrintSetting.PrintRankPercentage)
+                            if (header.Domain == LearningDomainName)
                             {
-                                Row lrow = table.InsertAfter(template.Clone(true), datarow) as Row;
-                                lrow.Cells[0].Write(builder, headerName);
-                                rowIndex++;
+                                string headerName = string.Empty;
+
+                                if (PrintSetting.PrintRank)
+                                    headerName = "學習領域排名";
+
+                                if (PrintSetting.PrintRankPercentage)
+                                    headerName = "學習領域百分比";
+
+                                if (PrintSetting.PrintRank && PrintSetting.PrintRankPercentage)
+                                    headerName = "學習領域排名/百分比";
+
+                                if (PrintSetting.PrintRank || PrintSetting.PrintRankPercentage)
+                                {
+                                    Row lrow = table.InsertAfter(template.Clone(true), datarow) as Row;
+                                    lrow.Cells[0].Write(builder, headerName);
+                                    rowIndex++;
+                                }
                             }
+
+                            if (IsFlexible(header.Domain))
+                            {
+                                datarow.Cells[0].Write(builder, header.Domain);
+                                datarow.Cells[1].Write(builder, header.Subject);
+                            }
+                            else if (header.Domain == LearningDomainName)
+                                datarow.Cells[0].Write(builder, header.Domain);
+                            else
+                                datarow.Cells[0].Write(builder, header.Subject);
                         }
 
-                        if (header.IsDomain)
+                        //填資料
+                        Row RatingRow = null;
+                        foreach (RowHeader header in indexHeaders)
                         {
-                            if (hasGroup)
+                            SemesterDataCollection semesters = new SemesterDataCollection();
+                            Row row = table.Rows[header.Index + 3];
+                            foreach (SemesterData semester in student.SHistory.GetGradeYearSemester().GetSemesters(PrintSetting.PrintSemesters))
                             {
-                                datarow.Cells[0].Write(builder, groupName);
-                                datarow.Cells[1].Write(builder, header.Domain);
+                                SemesterData sysems = new SemesterData(0, semester.SchoolYear, semester.Semester);
+                                semesters.Add(sysems);
+
+                                if (!student.SemestersScore.Contains(sysems)) continue;
+                                if (!student.HeaderList.ContainsKey(sysems)) continue;
+
+                                int columnIndex = student.HeaderList[sysems];
+                                SemesterScore semsscore = student.SemestersScore[sysems];
+
+                                decimal? score = null;
+                                decimal? weight = null;
+
+                                if (header.IsDomain)
+                                {
+                                    if (semsscore.Domain.Contains(header.Domain))
+                                    {
+                                        score = semsscore.Domain[header.Domain].Value;
+                                        weight = semsscore.Domain[header.Domain].Weight;
+                                    }
+                                }
+                                else
+                                {
+                                    if (semsscore.Subject.Contains(header.Subject))
+                                    {
+                                        // 因為會有相同科目分屬不同領域，在判斷上需要加入領域判斷
+                                        string strDomain = semsscore.Subject[header.Subject].Domain;
+                                        if (string.IsNullOrEmpty(strDomain))
+                                            strDomain = "彈性課程";
+                                        if (header.Domain == strDomain)
+                                        {
+                                            score = semsscore.Subject[header.Subject].Value;
+                                            weight = semsscore.Subject[header.Subject].Weight;
+                                        }
+                                    }
+                                }
+
+                                if (header.Domain == LearningDomainName)
+                                {
+                                    score = semsscore.LearnDomainScore;
+
+                                    row.Cells[columnIndex * 3 + 2].CellFormat.FitText = false;
+                                    row.Cells[columnIndex * 3 + 2].CellFormat.HorizontalMerge = CellMerge.First;
+                                    row.Cells[columnIndex * 3 + 3].CellFormat.HorizontalMerge = CellMerge.Previous;
+
+                                    if (!score.HasValue) continue;
+
+                                    row.Cells[columnIndex * 3 + 2].Write(builder, ((double)score) + "");
+                                    row.Cells[columnIndex * 3 + 4].Write(builder, (Util.GetDegree(score.Value)));
+
+                                    if (PrintSetting.PrintRank || PrintSetting.PrintRankPercentage)
+                                        RatingRow = row.NextSibling as Row;
+                                }
+                                else
+                                {
+                                    if (!score.HasValue) continue;
+                                    if (!weight.HasValue) weight = 0;
+
+                                    row.Cells[columnIndex * 3 + 2].Write(builder, ((double)weight) + "");
+                                    row.Cells[columnIndex * 3 + 3].Write(builder, ((double)score) + "");
+                                    row.Cells[columnIndex * 3 + 4].Write(builder, (Util.GetDegree(score.Value)));
+                                }
+                            }
+
+                            //算平均...
+                            decimal? avgScore = null;
+                            if (header.IsDomain)
+                            {
+                                if (header.Domain == LearningDomainName)
+                                {
+                                    avgScore = student.SemestersScore.AvgLearningDomainScore(semesters);
+
+                                    if (!avgScore.HasValue) continue;
+
+                                    if (student.CalculationRule == null)
+                                        avgScore = Math.Round(avgScore.Value, 2, MidpointRounding.AwayFromZero);
+                                    else
+                                        avgScore = student.CalculationRule.ParseLearnDomainScore(avgScore.Value);
+                                }
+                                else
+                                {
+                                    avgScore = student.SemestersScore.AvgDomainScore(semesters, header.Domain);
+
+                                    if (!avgScore.HasValue) continue;
+
+                                    if (student.CalculationRule == null)
+                                        avgScore = Math.Round(avgScore.Value, 2, MidpointRounding.AwayFromZero);
+                                    else
+                                        avgScore = student.CalculationRule.ParseDomainScore(avgScore.Value);
+                                }
                             }
                             else
-                                datarow.Cells[0].Write(builder, header.Domain);
+                            {
+                                avgScore = student.SemestersScore.AvgSubjectScore(semesters, header.Subject);
+
+                                if (!avgScore.HasValue) continue;
+
+                                if (student.CalculationRule == null)
+                                    avgScore = Math.Round(avgScore.Value, 2, MidpointRounding.AwayFromZero);
+                                else
+                                    avgScore = student.CalculationRule.ParseSubjectScore(avgScore.Value);
+                            }
+
+                            //row.Cells[20].Write(builder, (double)avgScore + "");
+                            //row.Cells[21].Write(builder, Util.GetDegree(avgScore.Value));
+
+                            // 2017/11/23 穎驊修正，加入四~六年級 填表位置修正
+                            row.Cells[38].Write(builder, (double)avgScore + "");
+                            row.Cells[39].Write(builder, Util.GetDegree(avgScore.Value));
                         }
-                        else
+                        if (RatingRow != null)
                         {
-                            //把空白的領域當成「彈性課程」。
-                            string domain = IsFlexible(header.Domain) ? "彈性課程" : header.Domain;
-                            datarow.Cells[0].Write(builder, domain);
-                            datarow.Cells[1].Write(builder, header.Subject);
+                            PlaceCollection places = student.Places.NS("年排名");
+
+                            foreach (SemesterData semsIndex in student.HeaderList.Keys)
+                            {
+                                SemesterData raw = student.HeaderList.GetSRaw(semsIndex);
+
+                                if (raw == SemesterData.Empty) continue;
+
+                                string placeKey = SLearningDomainParser.GetSemesterString(raw);
+
+                                Cell datacell = RatingRow.Cells[student.HeaderList[semsIndex] * 3 + 2];
+
+                                if (places.Contains(placeKey))
+                                    datacell.Write(builder, GetPlaceString(places, placeKey));
+                            }
+
+                            if (places.Contains(LearningDomainName))
+                                RatingRow.Cells[20].Write(builder, GetPlaceString(places, LearningDomainName));
                         }
-                    }
-                    #endregion
 
-                    #region 填資料
-                    Row RatingRow = null;
-                    foreach (RowHeader header in indexHeaders)
-                    {
-                        SemesterDataCollection semesters = new SemesterDataCollection();
-                        Row row = table.Rows[header.Index + 3];
-                        foreach (SemesterData semester in student.SHistory.GetGradeYearSemester().GetSemesters(PrintSetting.PrintSemesters))
+                        //合併相關欄位。
+                        string previousCellDomain = string.Empty;
+                        foreach (RowHeader header in indexHeaders)
                         {
-                            SemesterData sysems = new SemesterData(0, semester.SchoolYear, semester.Semester);
-                            semesters.Add(sysems);
-
-                            if (!student.SemestersScore.Contains(sysems)) continue;
-                            if (!student.HeaderList.ContainsKey(sysems)) continue;
-
-                            int columnIndex = student.HeaderList[sysems];
-                            SemesterScore semsscore = student.SemestersScore[sysems];
-
-                            decimal? score = null;
-                            decimal? weight = null;
+                            Row row = table.Rows[header.Index + 3];
 
                             if (header.IsDomain)
                             {
-                                if (semsscore.Domain.Contains(header.Domain))
+                                if (header.Domain == LearningDomainName)
                                 {
-                                    score = semsscore.Domain[header.Domain].Value;
-                                    weight = semsscore.Domain[header.Domain].Weight;
-                                }
-                            }
-                            else
-                            {
-                                if (semsscore.Subject.Contains(header.Subject))
-                                {
-                                    // 因為會有相同科目分屬不同領域，在判斷上需要加入領域判斷
-                                    string strDomain = semsscore.Subject[header.Subject].Domain;
-
-                                    if (header.Domain == strDomain)
-                                    {
-                                        score = semsscore.Subject[header.Subject].Value;
-                                        weight = semsscore.Subject[header.Subject].Weight;
-                                    }
-
-                                    //score = semsscore.Subject[header.Subject].Value;
-                                    //weight = semsscore.Subject[header.Subject].Weight;
-                                }
-                            }
-
-                            if (header.Domain == LearningDomainName)
-                            {
-                                score = semsscore.LearnDomainScore;
-
-                                row.Cells[columnIndex * 3 + 2].CellFormat.FitText = false;
-                                row.Cells[columnIndex * 3 + 2].CellFormat.HorizontalMerge = CellMerge.First;
-                                row.Cells[columnIndex * 3 + 3].CellFormat.HorizontalMerge = CellMerge.Previous;
-
-                                if (!score.HasValue) continue;
-
-                                row.Cells[columnIndex * 3 + 2].Write(builder, ((double)score) + "");
-                                row.Cells[columnIndex * 3 + 4].Write(builder, (Util.GetDegree(score.Value)));
-
-                                if (PrintSetting.PrintRank || PrintSetting.PrintRankPercentage)
-                                    RatingRow = row.NextSibling as Row;
-                            }
-                            else
-                            {
-                                if (!score.HasValue) continue;
-                                if (!weight.HasValue) weight = 0;
-
-                                row.Cells[columnIndex * 3 + 2].Write(builder, ((double)weight) + "");
-                                row.Cells[columnIndex * 3 + 3].Write(builder, ((double)score) + "");
-                                row.Cells[columnIndex * 3 + 4].Write(builder, (Util.GetDegree(score.Value)));
-                            }
-                        }
-
-                        //算平均...
-                        decimal? avgScore = null;
-                        if (header.IsDomain)
-                        {
-                            if (header.Domain == LearningDomainName)
-                            {
-                                avgScore = student.SemestersScore.AvgLearningDomainScore(semesters);
-
-                                if (!avgScore.HasValue) continue;
-
-                                if (student.CalculationRule == null)
-                                    avgScore = Math.Round(avgScore.Value, 2, MidpointRounding.AwayFromZero);
-                                else
-                                    avgScore = student.CalculationRule.ParseLearnDomainScore(avgScore.Value);
-                            }
-                            else
-                            {
-                                avgScore = student.SemestersScore.AvgDomainScore(semesters, header.Domain);
-
-                                if (!avgScore.HasValue) continue;
-
-                                if (student.CalculationRule == null)
-                                    avgScore = Math.Round(avgScore.Value, 2, MidpointRounding.AwayFromZero);
-                                else
-                                    avgScore = student.CalculationRule.ParseDomainScore(avgScore.Value);
-                            }
-                        }
-                        else
-                        {
-                            avgScore = student.SemestersScore.AvgSubjectScore(semesters, header.Subject);
-
-                            if (!avgScore.HasValue) continue;
-
-                            if (student.CalculationRule == null)
-                                avgScore = Math.Round(avgScore.Value, 2, MidpointRounding.AwayFromZero);
-                            else
-                                avgScore = student.CalculationRule.ParseSubjectScore(avgScore.Value);
-                        }
-
-                        //row.Cells[20].Write(builder, (double)avgScore + "");
-                        //row.Cells[21].Write(builder, Util.GetDegree(avgScore.Value));
-
-                        // 2017/11/23 穎驊修正，加入四~六年級 填表位置修正
-                        row.Cells[38].Write(builder, (double)avgScore + "");
-                        row.Cells[39].Write(builder, Util.GetDegree(avgScore.Value));
-                    }
-
-                    if (RatingRow != null)
-                    {
-                        PlaceCollection places = student.Places.NS("年排名");
-
-                        foreach (SemesterData semsIndex in student.HeaderList.Keys)
-                        {
-                            SemesterData raw = student.HeaderList.GetSRaw(semsIndex);
-
-                            if (raw == SemesterData.Empty) continue;
-
-                            string placeKey = SLearningDomainParser.GetSemesterString(raw);
-
-                            Cell datacell = RatingRow.Cells[student.HeaderList[semsIndex] * 3 + 2];
-
-                            if (places.Contains(placeKey))
-                                datacell.Write(builder, GetPlaceString(places, placeKey));
-                        }
-
-                        if (places.Contains(LearningDomainName))
-                            RatingRow.Cells[20].Write(builder, GetPlaceString(places, LearningDomainName));
-                    }
-                    #endregion
-
-                    #region 合併相關欄位。
-                    string previousCellDomain = string.Empty;
-                    foreach (RowHeader header in indexHeaders)
-                    {
-                        bool hasGroup = !string.IsNullOrEmpty(Subj.GetDomainGroup(header.Domain));
-                        string groupName = Subj.GetDomainGroup(header.Domain);
-
-                        Row row = table.Rows[header.Index + 3];
-
-                        if (previousCellDomain == row.Cells[0].ToTxt())
-                            row.Cells[0].CellFormat.VerticalMerge = CellMerge.Previous;
-                        else
-                            row.Cells[0].CellFormat.VerticalMerge = CellMerge.First;
-
-                        if (header.IsDomain)
-                        {
-                            if (header.Domain == LearningDomainName)
-                            {
-                                #region 學習領域
-                                row.Cells[0].CellFormat.FitText = false;
-                                row.Cells[0].CellFormat.HorizontalMerge = CellMerge.First;
-                                row.Cells[1].CellFormat.HorizontalMerge = CellMerge.Previous;
-
-                                if (PrintSetting.PrintRank || PrintSetting.PrintRankPercentage)
-                                {
-                                    Row lrow = row.NextSibling as Row;
-                                    lrow.Cells[0].CellFormat.HorizontalMerge = CellMerge.First;
-                                    lrow.Cells[0].CellFormat.FitText = false;
-                                    lrow.Cells[1].CellFormat.HorizontalMerge = CellMerge.Previous;
-                                    Paragraph mp = lrow.Cells[2].Paragraphs[0];
-                                    for (int i = 0; i < (3 * 6); i++)
-                                    {
-                                        if (i % 3 == 0)
-                                        {
-                                            (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.First;
-                                            (mp.ParentNode as Cell).CellFormat.FitText = false;
-                                        }
-                                        else
-                                            (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.Previous;
-
-                                        mp = Util.NextCell(mp as Paragraph);
-                                    }
-                                    (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.First;
-                                    mp = Util.NextCell(mp as Paragraph);
-                                    (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.Previous;
-                                }
-                                #endregion
-                            }
-                            else
-                            {
-                                if (!hasGroup)
-                                {
+                                    row.Cells[0].CellFormat.FitText = false;
                                     row.Cells[0].CellFormat.HorizontalMerge = CellMerge.First;
                                     row.Cells[1].CellFormat.HorizontalMerge = CellMerge.Previous;
-                                }
-                            }
-                        }
 
-                        previousCellDomain = row.Cells[0].ToTxt();
-                    }
-                    #endregion
-
-                    #endregion
-                }
-                else if (PrintSetting.ListMethod == ListMethod.SubjectOnly)
-                {
-                    #region 列印科目
-                    UniqueSet<RowHeader> RowIndexs = new UniqueSet<RowHeader>();
-
-                    foreach (SemesterData semester in student.SHistory.GetGradeYearSemester().GetSemesters(PrintSetting.PrintSemesters))
-                    {
-                        SemesterData sysems = new SemesterData(0, semester.SchoolYear, semester.Semester);
-                        if (!student.SemestersScore.Contains(sysems)) continue;
-
-                        SemesterScore semsscore = student.SemestersScore[sysems];
-
-                        foreach (string strSubject in semsscore.Subject)
-                        {
-                            SemesterSubjectScore subject = semsscore.Subject[strSubject];
-
-                            RowHeader header;
-                            if (IsFlexible(subject.Domain))
-                                header = new RowHeader("彈性課程", strSubject);
-                            else
-                                header = new RowHeader(subject.Domain, strSubject);
-
-                            header.IsDomain = false;
-
-                            if (!RowIndexs.Contains(header))
-                                RowIndexs.Add(header);
-                        }
-                    }
-
-                    RowHeader lheader = new RowHeader(LearningDomainName, string.Empty);
-                    lheader.IsDomain = true;
-                    //RowIndexs.Add(lheader);
-
-                    //List<RowHeader> sortedHeaders = SortHeader(RowIndexs.ToList());
-                    List<RowHeader> sortedHeaders = RowIndexs.ToList();
-
-                    sortedHeaders.Sort(delegate(RowHeader x, RowHeader y)
-                    {
-                        Subj xx = new JHSchool.Evaluation.Subject(x.Subject, x.Domain);
-                        Subj yy = new JHSchool.Evaluation.Subject(y.Subject, y.Domain);
-
-                        return xx.CompareTo(yy);
-                    });
-                    //sortedHeaders.Sort(Util.SortSubject);
-                    //sortedHeaders.Sort(Util.SortDomain);
-
-                    //把學習領域放在正確的地方。
-                    foreach (RowHeader eachHeader in sortedHeaders.ToArray())
-                    {
-                        if (IsFlexible(eachHeader.Domain))
-                        {
-                            int index = sortedHeaders.IndexOf(eachHeader);
-                            sortedHeaders.Insert(index, lheader);
-                            break;
-                        }
-                    }
-                    if (sortedHeaders.IndexOf(lheader) < 0)
-                        sortedHeaders.Add(lheader);
-
-                    //產生 Row。
-                    List<RowHeader> indexHeaders = new List<RowHeader>();
-                    Row current = template;
-                    int rowIndex = 0;
-                    foreach (RowHeader header in sortedHeaders)
-                    {
-                        RowHeader indexH = header;
-                        indexH.Index = rowIndex++;
-                        indexHeaders.Add(indexH);
-
-                        Row datarow = table.InsertBefore(template.Clone(true), current) as Row;
-
-                        if (header.Domain == LearningDomainName)
-                        {
-                            string headerName = string.Empty;
-
-                            if (PrintSetting.PrintRank)
-                                headerName = "學習領域排名";
-
-                            if (PrintSetting.PrintRankPercentage)
-                                headerName = "學習領域百分比";
-
-                            if (PrintSetting.PrintRank && PrintSetting.PrintRankPercentage)
-                                headerName = "學習領域排名/百分比";
-
-                            if (PrintSetting.PrintRank || PrintSetting.PrintRankPercentage)
-                            {
-                                Row lrow = table.InsertAfter(template.Clone(true), datarow) as Row;
-                                lrow.Cells[0].Write(builder, headerName);
-                                rowIndex++;
-                            }
-                        }
-
-                        if (IsFlexible(header.Domain))
-                        {
-                            datarow.Cells[0].Write(builder, header.Domain);
-                            datarow.Cells[1].Write(builder, header.Subject);
-                        }
-                        else if (header.Domain == LearningDomainName)
-                            datarow.Cells[0].Write(builder, header.Domain);
-                        else
-                            datarow.Cells[0].Write(builder, header.Subject);
-                    }
-
-                    //填資料
-                    Row RatingRow = null;
-                    foreach (RowHeader header in indexHeaders)
-                    {
-                        SemesterDataCollection semesters = new SemesterDataCollection();
-                        Row row = table.Rows[header.Index + 3];
-                        foreach (SemesterData semester in student.SHistory.GetGradeYearSemester().GetSemesters(PrintSetting.PrintSemesters))
-                        {
-                            SemesterData sysems = new SemesterData(0, semester.SchoolYear, semester.Semester);
-                            semesters.Add(sysems);
-
-                            if (!student.SemestersScore.Contains(sysems)) continue;
-                            if (!student.HeaderList.ContainsKey(sysems)) continue;
-
-                            int columnIndex = student.HeaderList[sysems];
-                            SemesterScore semsscore = student.SemestersScore[sysems];
-
-                            decimal? score = null;
-                            decimal? weight = null;
-
-                            if (header.IsDomain)
-                            {
-                                if (semsscore.Domain.Contains(header.Domain))
-                                {
-                                    score = semsscore.Domain[header.Domain].Value;
-                                    weight = semsscore.Domain[header.Domain].Weight;
-                                }
-                            }
-                            else
-                            {
-                                if (semsscore.Subject.Contains(header.Subject))
-                                {
-                                    // 因為會有相同科目分屬不同領域，在判斷上需要加入領域判斷
-                                    string strDomain = semsscore.Subject[header.Subject].Domain;
-                                    if (string.IsNullOrEmpty(strDomain))
-                                        strDomain = "彈性課程";
-                                    if (header.Domain == strDomain)
+                                    if (PrintSetting.PrintRank || PrintSetting.PrintRankPercentage)
                                     {
-                                        score = semsscore.Subject[header.Subject].Value;
-                                        weight = semsscore.Subject[header.Subject].Weight;
+                                        Row lrow = row.NextSibling as Row;
+                                        lrow.Cells[0].CellFormat.HorizontalMerge = CellMerge.First;
+                                        lrow.Cells[0].CellFormat.FitText = false;
+                                        lrow.Cells[1].CellFormat.HorizontalMerge = CellMerge.Previous;
+                                        Paragraph mp = lrow.Cells[2].Paragraphs[0];
+                                        for (int i = 0; i < (3 * 6); i++)
+                                        {
+                                            if (i % 3 == 0)
+                                            {
+                                                (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.First;
+                                                (mp.ParentNode as Cell).CellFormat.FitText = false;
+                                            }
+                                            else
+                                                (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.Previous;
+
+                                            mp = Util.NextCell(mp as Paragraph);
+                                        }
+                                        (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.First;
+                                        mp = Util.NextCell(mp as Paragraph);
+                                        (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.Previous;
                                     }
                                 }
                             }
-
-                            if (header.Domain == LearningDomainName)
+                            else if (IsFlexible(header.Domain))
                             {
-                                score = semsscore.LearnDomainScore;
-
-                                row.Cells[columnIndex * 3 + 2].CellFormat.FitText = false;
-                                row.Cells[columnIndex * 3 + 2].CellFormat.HorizontalMerge = CellMerge.First;
-                                row.Cells[columnIndex * 3 + 3].CellFormat.HorizontalMerge = CellMerge.Previous;
-
-                                if (!score.HasValue) continue;
-
-                                row.Cells[columnIndex * 3 + 2].Write(builder, ((double)score) + "");
-                                row.Cells[columnIndex * 3 + 4].Write(builder, (Util.GetDegree(score.Value)));
-
-                                if (PrintSetting.PrintRank || PrintSetting.PrintRankPercentage)
-                                    RatingRow = row.NextSibling as Row;
-                            }
-                            else
-                            {
-                                if (!score.HasValue) continue;
-                                if (!weight.HasValue) weight = 0;
-
-                                row.Cells[columnIndex * 3 + 2].Write(builder, ((double)weight) + "");
-                                row.Cells[columnIndex * 3 + 3].Write(builder, ((double)score) + "");
-                                row.Cells[columnIndex * 3 + 4].Write(builder, (Util.GetDegree(score.Value)));
-                            }
-                        }
-
-                        //算平均...
-                        decimal? avgScore = null;
-                        if (header.IsDomain)
-                        {
-                            if (header.Domain == LearningDomainName)
-                            {
-                                avgScore = student.SemestersScore.AvgLearningDomainScore(semesters);
-
-                                if (!avgScore.HasValue) continue;
-
-                                if (student.CalculationRule == null)
-                                    avgScore = Math.Round(avgScore.Value, 2, MidpointRounding.AwayFromZero);
+                                if (previousCellDomain == header.Domain)
+                                    row.Cells[0].CellFormat.VerticalMerge = CellMerge.Previous;
                                 else
-                                    avgScore = student.CalculationRule.ParseLearnDomainScore(avgScore.Value);
+                                    row.Cells[0].CellFormat.VerticalMerge = CellMerge.First;
+
+                                previousCellDomain = header.Domain;
                             }
                             else
                             {
-                                avgScore = student.SemestersScore.AvgDomainScore(semesters, header.Domain);
-
-                                if (!avgScore.HasValue) continue;
-
-                                if (student.CalculationRule == null)
-                                    avgScore = Math.Round(avgScore.Value, 2, MidpointRounding.AwayFromZero);
-                                else
-                                    avgScore = student.CalculationRule.ParseDomainScore(avgScore.Value);
-                            }
-                        }
-                        else
-                        {
-                            avgScore = student.SemestersScore.AvgSubjectScore(semesters, header.Subject);
-
-                            if (!avgScore.HasValue) continue;
-
-                            if (student.CalculationRule == null)
-                                avgScore = Math.Round(avgScore.Value, 2, MidpointRounding.AwayFromZero);
-                            else
-                                avgScore = student.CalculationRule.ParseSubjectScore(avgScore.Value);
-                        }
-
-                        //row.Cells[20].Write(builder, (double)avgScore + "");
-                        //row.Cells[21].Write(builder, Util.GetDegree(avgScore.Value));
-
-                        // 2017/11/23 穎驊修正，加入四~六年級 填表位置修正
-                        row.Cells[38].Write(builder, (double)avgScore + "");
-                        row.Cells[39].Write(builder, Util.GetDegree(avgScore.Value));
-                    }
-                    if (RatingRow != null)
-                    {
-                        PlaceCollection places = student.Places.NS("年排名");
-
-                        foreach (SemesterData semsIndex in student.HeaderList.Keys)
-                        {
-                            SemesterData raw = student.HeaderList.GetSRaw(semsIndex);
-
-                            if (raw == SemesterData.Empty) continue;
-
-                            string placeKey = SLearningDomainParser.GetSemesterString(raw);
-
-                            Cell datacell = RatingRow.Cells[student.HeaderList[semsIndex] * 3 + 2];
-
-                            if (places.Contains(placeKey))
-                                datacell.Write(builder, GetPlaceString(places, placeKey));
-                        }
-
-                        if (places.Contains(LearningDomainName))
-                            RatingRow.Cells[20].Write(builder, GetPlaceString(places, LearningDomainName));
-                    }
-
-                    //合併相關欄位。
-                    string previousCellDomain = string.Empty;
-                    foreach (RowHeader header in indexHeaders)
-                    {
-                        Row row = table.Rows[header.Index + 3];
-
-                        if (header.IsDomain)
-                        {
-                            if (header.Domain == LearningDomainName)
-                            {
-                                row.Cells[0].CellFormat.FitText = false;
+                                //row.Cells[0].CellFormat.FitText = true;
                                 row.Cells[0].CellFormat.HorizontalMerge = CellMerge.First;
                                 row.Cells[1].CellFormat.HorizontalMerge = CellMerge.Previous;
-
-                                if (PrintSetting.PrintRank || PrintSetting.PrintRankPercentage)
-                                {
-                                    Row lrow = row.NextSibling as Row;
-                                    lrow.Cells[0].CellFormat.HorizontalMerge = CellMerge.First;
-                                    lrow.Cells[0].CellFormat.FitText = false;
-                                    lrow.Cells[1].CellFormat.HorizontalMerge = CellMerge.Previous;
-                                    Paragraph mp = lrow.Cells[2].Paragraphs[0];
-                                    for (int i = 0; i < (3 * 6); i++)
-                                    {
-                                        if (i % 3 == 0)
-                                        {
-                                            (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.First;
-                                            (mp.ParentNode as Cell).CellFormat.FitText = false;
-                                        }
-                                        else
-                                            (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.Previous;
-
-                                        mp = Util.NextCell(mp as Paragraph);
-                                    }
-                                    (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.First;
-                                    mp = Util.NextCell(mp as Paragraph);
-                                    (mp.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.Previous;
-                                }
                             }
                         }
-                        else if (IsFlexible(header.Domain))
-                        {
-                            if (previousCellDomain == header.Domain)
-                                row.Cells[0].CellFormat.VerticalMerge = CellMerge.Previous;
-                            else
-                                row.Cells[0].CellFormat.VerticalMerge = CellMerge.First;
+                        #endregion
+                    }
 
-                            previousCellDomain = header.Domain;
-                        }
-                        else
+                    template.NextSibling.Remove();
+                    template.Remove();
+                    #endregion
+                }
+                else if (e.FieldName == "Fix:缺曠獎懲")
+                {
+                    #region 列印獎懲資料
+                    int Offset = 2;
+                    Row MeritA = builder.CurrentParagraph.ParentNode.ParentNode as Row;
+                    Row MeritB = MeritA.NextSibling as Row;
+                    Row MeritC = MeritB.NextSibling as Row;
+                    Row DemeritA = MeritC.NextSibling as Row;
+                    Row DemeritB = DemeritA.NextSibling as Row;
+                    Row DemeritC = DemeritB.NextSibling as Row;
+                    Row DisciplineSet = DemeritC.NextSibling as Row;
+                    Row DisciplineNormal = DisciplineSet.NextSibling as Row;
+
+                    foreach (SemesterData each in student.Summaries.Keys)
+                    {
+                        XmlElement summary = student.Summaries[each];
+
+                        if (!student.HeaderList.ContainsKey(each)) continue;
+
+                        int ColumnIndex = student.HeaderList[each];
+
+                        XmlElement xmlmerit = summary.SelectSingleNode("DisciplineStatistics/Merit") as XmlElement;
+                        XmlElement xmldemerit = summary.SelectSingleNode("DisciplineStatistics/Demerit") as XmlElement;
+
+                        if (xmlmerit != null)
                         {
-                            //row.Cells[0].CellFormat.FitText = true;
-                            row.Cells[0].CellFormat.HorizontalMerge = CellMerge.First;
-                            row.Cells[1].CellFormat.HorizontalMerge = CellMerge.Previous;
+                            if (!string.IsNullOrEmpty(GetString(xmlmerit.GetAttribute("A"))))
+                                MeritA.Cells[Offset + ColumnIndex].Write(builder, GetString(xmlmerit.GetAttribute("A")));
+                            if (!string.IsNullOrEmpty(GetString(xmlmerit.GetAttribute("B"))))
+                                MeritB.Cells[Offset + ColumnIndex].Write(builder, GetString(xmlmerit.GetAttribute("B")));
+                            if (!string.IsNullOrEmpty(GetString(xmlmerit.GetAttribute("C"))))
+                                MeritC.Cells[Offset + ColumnIndex].Write(builder, GetString(xmlmerit.GetAttribute("C")));
                         }
+
+                        if (xmldemerit != null)
+                        {
+                            if (!string.IsNullOrEmpty(GetString(xmldemerit.GetAttribute("A"))))
+                                DemeritA.Cells[Offset + ColumnIndex].Write(builder, GetString(xmldemerit.GetAttribute("A")));
+                            if (!string.IsNullOrEmpty(GetString(xmldemerit.GetAttribute("B"))))
+                                DemeritB.Cells[Offset + ColumnIndex].Write(builder, GetString(xmldemerit.GetAttribute("B")));
+                            if (!string.IsNullOrEmpty(GetString(xmldemerit.GetAttribute("C"))))
+                                DemeritC.Cells[Offset + ColumnIndex].Write(builder, GetString(xmldemerit.GetAttribute("C")));
+                        }
+
+                        StringBuilder normalString = new StringBuilder();
+                        StringBuilder setString = new StringBuilder();
+
+                        foreach (XmlElement absence in summary.SelectNodes("AttendanceStatistics/Absence"))
+                        {
+                            string count = absence.GetAttribute("Count");
+                            string periodType = absence.GetAttribute("PeriodType");
+                            string periodName = absence.GetAttribute("Name");
+
+                            if (string.IsNullOrEmpty(count)) continue;
+                            if (!PrintAbsences.ContainsKey(periodType)) continue;
+                            if (!PrintAbsences[periodType].Contains(periodName)) continue;
+
+                            if (periodType == "一般")
+                            {
+                                if (normalString.Length > 0) normalString.AppendLine();
+                                normalString.Append(periodName + "：" + count);
+                            }
+                            else if (periodType == "集會")
+                            {
+                                if (setString.Length > 0) setString.AppendLine();
+                                setString.Append(periodName + "：" + count);
+                            }
+                        }
+
+                        DisciplineNormal.Cells[Offset + ColumnIndex].Write(builder, normalString.ToString());
+                        DisciplineSet.Cells[Offset + ColumnIndex].Write(builder, setString.ToString());
                     }
                     #endregion
                 }
-
-                template.NextSibling.Remove();
-                template.Remove();
-                #endregion
-            }
-            else if (e.FieldName == "Fix:缺曠獎懲")
-            {
-                #region 列印獎懲資料
-                int Offset = 2;
-                Row MeritA = builder.CurrentParagraph.ParentNode.ParentNode as Row;
-                Row MeritB = MeritA.NextSibling as Row;
-                Row MeritC = MeritB.NextSibling as Row;
-                Row DemeritA = MeritC.NextSibling as Row;
-                Row DemeritB = DemeritA.NextSibling as Row;
-                Row DemeritC = DemeritB.NextSibling as Row;
-                Row DisciplineSet = DemeritC.NextSibling as Row;
-                Row DisciplineNormal = DisciplineSet.NextSibling as Row;
-
-                foreach (SemesterData each in student.Summaries.Keys)
+                else if (e.FieldName == "Fix:服務學習時數")
                 {
-                    XmlElement summary = student.Summaries[each];
+                    #region 列印服務學習時數
+                    int Offset = 1;
+                    Row LSDataRow = builder.CurrentParagraph.ParentNode.ParentNode as Row;
 
-                    if (!student.HeaderList.ContainsKey(each)) continue;
 
-                    int ColumnIndex = student.HeaderList[each];
-
-                    XmlElement xmlmerit = summary.SelectSingleNode("DisciplineStatistics/Merit") as XmlElement;
-                    XmlElement xmldemerit = summary.SelectSingleNode("DisciplineStatistics/Demerit") as XmlElement;
-
-                    if (xmlmerit != null)
+                    foreach (SemesterData each in student.HeaderList.Keys)
                     {
-                        if (!string.IsNullOrEmpty(GetString(xmlmerit.GetAttribute("A"))))
-                            MeritA.Cells[Offset + ColumnIndex].Write(builder, GetString(xmlmerit.GetAttribute("A")));
-                        if (!string.IsNullOrEmpty(GetString(xmlmerit.GetAttribute("B"))))
-                            MeritB.Cells[Offset + ColumnIndex].Write(builder, GetString(xmlmerit.GetAttribute("B")));
-                        if (!string.IsNullOrEmpty(GetString(xmlmerit.GetAttribute("C"))))
-                            MeritC.Cells[Offset + ColumnIndex].Write(builder, GetString(xmlmerit.GetAttribute("C")));
-                    }
+                        int ColumnIndex = student.HeaderList[each];
 
-                    if (xmldemerit != null)
-                    {
-                        if (!string.IsNullOrEmpty(GetString(xmldemerit.GetAttribute("A"))))
-                            DemeritA.Cells[Offset + ColumnIndex].Write(builder, GetString(xmldemerit.GetAttribute("A")));
-                        if (!string.IsNullOrEmpty(GetString(xmldemerit.GetAttribute("B"))))
-                            DemeritB.Cells[Offset + ColumnIndex].Write(builder, GetString(xmldemerit.GetAttribute("B")));
-                        if (!string.IsNullOrEmpty(GetString(xmldemerit.GetAttribute("C"))))
-                            DemeritC.Cells[Offset + ColumnIndex].Write(builder, GetString(xmldemerit.GetAttribute("C")));
-                    }
-
-                    StringBuilder normalString = new StringBuilder();
-                    StringBuilder setString = new StringBuilder();
-
-                    foreach (XmlElement absence in summary.SelectNodes("AttendanceStatistics/Absence"))
-                    {
-                        string count = absence.GetAttribute("Count");
-                        string periodType = absence.GetAttribute("PeriodType");
-                        string periodName = absence.GetAttribute("Name");
-
-                        if (string.IsNullOrEmpty(count)) continue;
-                        if (!PrintAbsences.ContainsKey(periodType)) continue;
-                        if (!PrintAbsences[periodType].Contains(periodName)) continue;
-
-                        if (periodType == "一般")
+                        // 處理服務學習時數
+                        if (Util._SLRDict.ContainsKey(student.StudentID))
                         {
-                            if (normalString.Length > 0) normalString.AppendLine();
-                            normalString.Append(periodName + "：" + count);
-                        }
-                        else if (periodType == "集會")
-                        {
-                            if (setString.Length > 0) setString.AppendLine();
-                            setString.Append(periodName + "：" + count);
-                        }
-                    }
-
-                    DisciplineNormal.Cells[Offset + ColumnIndex].Write(builder, normalString.ToString());
-                    DisciplineSet.Cells[Offset + ColumnIndex].Write(builder, setString.ToString());
-                }
-                #endregion
-            }
-            else if (e.FieldName == "Fix:服務學習時數")
-            {
-                #region 列印服務學習時數
-                int Offset = 1;
-                Row LSDataRow = builder.CurrentParagraph.ParentNode.ParentNode as Row;
-
-
-                foreach (SemesterData each in student.HeaderList.Keys)
-                {
-                    int ColumnIndex = student.HeaderList[each];
-
-                    // 處理服務學習時數
-                    if (Util._SLRDict.ContainsKey(student.StudentID))
-                    {                        
                             string key = each.SchoolYear + "_" + each.Semester;
                             if (Util._SLRDict[student.StudentID].ContainsKey(key))
                             {
                                 string val = Util._SLRDict[student.StudentID][key];
                                 LSDataRow.Cells[Offset + ColumnIndex].Write(builder, val);
                             }
+                        }
                     }
-                }
 
-                #endregion
+                    #endregion
+                }
+            }
+
+            void IFieldMergingCallback.ImageFieldMerging(ImageFieldMergingArgs e)
+            {
+
             }
         }
 
-        private void RefineDomain(SemesterSubjectScore subject)
+        private static void RefineDomain(SemesterSubjectScore subject)
         {
             if (subject.Domain.Trim() == "彈性課程")
                 subject.Domain = string.Empty;
         }
 
-        private bool IsFlexible(string domainName)
+        private static bool IsFlexible(string domainName)
         {
             if (string.IsNullOrEmpty(domainName))
                 return true;
@@ -899,7 +908,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
         /// </summary>
         /// <param name="list"></param>
         /// <returns></returns>
-        private List<RowHeader> SortHeader(List<RowHeader> list)
+        private static List<RowHeader> SortHeader(List<RowHeader> list)
         {
             List<RowHeader> domains = new List<RowHeader>();
             List<RowHeader> subjects = new List<RowHeader>();
@@ -946,7 +955,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
             return result;
         }
 
-        private string GetPlaceString(PlaceCollection places, string placeKey)
+        private static string GetPlaceString(PlaceCollection places, string placeKey)
         {
             Place place = places[placeKey];
             decimal percentage = (100m * ((decimal)place.Level / (decimal)place.Radix));
@@ -1080,6 +1089,11 @@ namespace JHEvaluation.StudentScoreSummaryReport
             }
 
             public string TableName { get { return string.Empty; } }
+
+            public IMailMergeDataSource GetChildDataSource(string sourceName)
+            {
+                return null;
+            }
 
             #endregion
         }

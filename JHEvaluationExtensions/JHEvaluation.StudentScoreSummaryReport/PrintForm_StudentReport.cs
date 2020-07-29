@@ -154,7 +154,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
             {
                 _SujectTemplateList.Add(item.Name);
             }
-            
+
             #region 抓取學生資料 
             //抓取學生資料 
             //學生基本資料
@@ -259,7 +259,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
             foreach (JHSemesterScoreRecord ssr in ssr_list)
             {
-                
+
                 if (!jssr_dict.ContainsKey(ssr.RefStudentID))
                 {
                     jssr_dict.Add(ssr.RefStudentID, new List<JHSemesterScoreRecord>());
@@ -1326,9 +1326,16 @@ namespace JHEvaluation.StudentScoreSummaryReport
                     row["學生班級"] = sr_dict[stuID].Class != null ? sr_dict[stuID].Class.Name : "";
                     row["學生性別"] = sr_dict[stuID].Gender;
 
-                    birthday = (DateTime)sr_dict[stuID].Birthday;
-                    // 轉換出生時間 成 2005/09/06 的格式
-                    row["出生日期"] = birthday.ToString("yyyy/MM/dd");
+                    if (sr_dict[stuID].Birthday != null)
+                    {
+                        birthday = (DateTime)sr_dict[stuID].Birthday;
+                        // 轉換出生時間 成 2005/09/06 的格式
+                        row["出生日期"] = birthday.ToString("yyyy/MM/dd");
+                    }
+                    else
+                    {
+                        row["出生日期"] = "";
+                    }
 
                     row["入學年月"] = "";
                     row["學生身分證字號"] = sr_dict[stuID].IDNumber;
@@ -1603,17 +1610,18 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 // 學期成績(包含領域、科目)      
 
                 //一般科目 科目名稱與科目編號對照表
-                Dictionary<string, Dictionary<string, int>> SubjectCourseDict = new Dictionary<string, Dictionary<string, int>>() {
+                Dictionary<string, Dictionary<string, int>> SubjectCourseDict = new Dictionary<string, Dictionary<string, int>>()
+                {
                     { "語文", new Dictionary<string, int>() }
-                    , {"數學", new Dictionary<string, int>() }
-                    , {"自然科學", new Dictionary<string, int>() }
-                    , {"科技", new Dictionary<string, int>() }
-                    , {"社會", new Dictionary<string, int>() }
-                    , {"藝術", new Dictionary<string, int>() }
-                    , {"健康與體育", new Dictionary<string, int>() }
-                    , {"綜合活動", new Dictionary<string, int>() }
-                    , {"藝術與人文", new Dictionary<string, int>() }
-                    , {"自然與生活科技", new Dictionary<string, int>() }
+                    , { "數學", new Dictionary<string, int>() }
+                    , { "自然科學", new Dictionary<string, int>() }
+                    , { "科技", new Dictionary<string, int>() }
+                    , { "社會", new Dictionary<string, int>() }
+                    , { "藝術", new Dictionary<string, int>() }
+                    , { "健康與體育", new Dictionary<string, int>() }
+                    , { "綜合活動", new Dictionary<string, int>() }
+                    , { "藝術與人文", new Dictionary<string, int>() }
+                    , { "自然與生活科技", new Dictionary<string, int>() }
                 };
 
                 if (jssr_dict.ContainsKey(stuID))
@@ -1628,29 +1636,32 @@ namespace JHEvaluation.StudentScoreSummaryReport
                             if (jssr.SchoolYear == schoolyear_grade_dict[grade])
                             {
                                 foreach (var subjectscore in jssr.Subjects)
-                                    {
+                                {
                                     // 領域為彈性課程 、或是沒有領域的科目成績 算到彈性課程科目處理
-                                    if (subjectscore.Value.Domain != "彈性課程" && subjectscore.Value.Domain != "")
+                                    if (subjectscore.Value.Domain != "彈性課程" && subjectscore.Value.Domain != "彈性學習" && subjectscore.Value.Domain != "")
                                     {
-                                        int subjectCourseCount = SubjectCourseDict[subjectscore.Value.Domain].Count;
-
-                                        if (SubjectCourseDict[subjectscore.Value.Domain].ContainsKey(subjectscore.Value.Subject))
+                                        if (SubjectCourseDict.ContainsKey(subjectscore.Value.Domain))
                                         {
-                                            continue;
+                                            int subjectCourseCount = SubjectCourseDict[subjectscore.Value.Domain].Count;
+
+                                            if (SubjectCourseDict[subjectscore.Value.Domain].ContainsKey(subjectscore.Value.Subject))
+                                            {
+                                                continue;
+                                            }
+
+                                            subjectCourseCount++;
+
+                                            // 目前僅支援 一個學生六學年之中同一領域僅能有 6個科目
+                                            if (subjectCourseCount > 6)
+                                            {
+                                                isExceed = true;
+                                                continue;
+                                            }
+
+                                            row[subjectscore.Value.Domain + subjectCourseCount + "_科目名稱"] = subjectscore.Value.Subject;
+
+                                            SubjectCourseDict[subjectscore.Value.Domain].Add(subjectscore.Value.Subject, subjectCourseCount); 
                                         }
-
-                                        subjectCourseCount++;
-
-                                        // 目前僅支援 一個學生六學年之中同一領域僅能有 6個科目
-                                        if (subjectCourseCount > 6)
-                                        {
-                                            isExceed = true;
-                                            continue;
-                                        }
-
-                                        row[subjectscore.Value.Domain + subjectCourseCount + "_科目名稱"] = subjectscore.Value.Subject;
-
-                                        SubjectCourseDict[subjectscore.Value.Domain].Add(subjectscore.Value.Subject, subjectCourseCount);
                                     }
                                 }
                             }
@@ -1682,7 +1693,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                 foreach (var subjectscore in jssr.Subjects)
                                 {
                                     // 領域為彈性課程 、或是沒有領域的科目成績 算到彈性課程科目處理
-                                    if (subjectscore.Value.Domain == "彈性課程" || subjectscore.Value.Domain == "")
+                                    if (subjectscore.Value.Domain == "彈性課程" || subjectscore.Value.Domain == "彈性學習" || subjectscore.Value.Domain == "")
                                     {
                                         // 對照科目名稱如果已經有，跳過
                                         if (AlternativeCourseDict.ContainsKey(subjectscore.Value.Subject))
@@ -1743,7 +1754,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                         int SubjectCourseNum = 0;
 
                                         // 領域為彈性課程 、或是沒有領域的科目成績 算到彈性課程科目處理
-                                        if (subjectscore.Value.Domain == "彈性課程" || subjectscore.Value.Domain == "")
+                                        if (subjectscore.Value.Domain == "彈性課程" || subjectscore.Value.Domain == "彈性學習" || subjectscore.Value.Domain == "")
                                         {
                                             if (AlternativeCourseDict.ContainsKey(subjectscore.Value.Subject))
                                             {
@@ -1760,25 +1771,28 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                                 if (subjectLevel_dict.ContainsKey("彈性課程" + AlternativeCourse + "_科目等第_" + (grade * 2 - 1)))
                                                 {
                                                     subjectLevel_dict["彈性課程" + AlternativeCourse + "_科目等第_" + (grade * 2 - 1)] = ScoreTolevel(subjectscore.Value.Score);
-                                                } 
+                                                }
                                             }
                                         }
                                         else
                                         {
-                                            if (SubjectCourseDict[subjectscore.Value.Domain].ContainsKey(subjectscore.Value.Subject))
+                                            if (SubjectCourseDict.ContainsKey(subjectscore.Value.Domain))
                                             {
-                                                SubjectCourseNum = SubjectCourseDict[subjectscore.Value.Domain][subjectscore.Value.Subject];
-
-                                                //紀錄成績
-                                                if (subjectScore_dict.ContainsKey(subjectscore.Value.Domain + SubjectCourseNum + "_科目成績_" + (grade * 2 - 1)))
+                                                if (SubjectCourseDict[subjectscore.Value.Domain].ContainsKey(subjectscore.Value.Subject))
                                                 {
-                                                    subjectScore_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目成績_" + (grade * 2 - 1)] = subjectscore.Value.Score;
-                                                }
+                                                    SubjectCourseNum = SubjectCourseDict[subjectscore.Value.Domain][subjectscore.Value.Subject];
 
-                                                //換算等第
-                                                if (subjectLevel_dict.ContainsKey(subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2 - 1)))
-                                                {
-                                                    subjectLevel_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2 - 1)] = ScoreTolevel(subjectscore.Value.Score);
+                                                    //紀錄成績
+                                                    if (subjectScore_dict.ContainsKey(subjectscore.Value.Domain + SubjectCourseNum + "_科目成績_" + (grade * 2 - 1)))
+                                                    {
+                                                        subjectScore_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目成績_" + (grade * 2 - 1)] = subjectscore.Value.Score;
+                                                    }
+
+                                                    //換算等第
+                                                    if (subjectLevel_dict.ContainsKey(subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2 - 1)))
+                                                    {
+                                                        subjectLevel_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2 - 1)] = ScoreTolevel(subjectscore.Value.Score);
+                                                    }
                                                 } 
                                             }
 
@@ -1839,7 +1853,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                         int SubjectCourseNum = 0;
 
                                         // 領域為彈性課程 、或是沒有領域的科目成績 算到彈性課程科目處理
-                                        if (subjectscore.Value.Domain == "彈性課程" || subjectscore.Value.Domain == "")
+                                        if (subjectscore.Value.Domain == "彈性課程" || subjectscore.Value.Domain == "彈性學習" || subjectscore.Value.Domain == "")
                                         {
                                             if (AlternativeCourseDict.ContainsKey(subjectscore.Value.Subject))
                                             {
@@ -1854,24 +1868,27 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                                 if (subjectLevel_dict.ContainsKey("彈性課程" + AlternativeCourse + "_科目等第_" + (grade * 2)))
                                                 {
                                                     subjectLevel_dict["彈性課程" + AlternativeCourse + "_科目等第_" + (grade * 2)] = ScoreTolevel(subjectscore.Value.Score);
-                                                } 
+                                                }
                                             }
                                         }
                                         else
                                         {
-                                            if (SubjectCourseDict[subjectscore.Value.Domain].ContainsKey(subjectscore.Value.Subject))
+                                            if (SubjectCourseDict.ContainsKey(subjectscore.Value.Domain))
                                             {
-                                                SubjectCourseNum = SubjectCourseDict[subjectscore.Value.Domain][subjectscore.Value.Subject];
-                                                //紀錄成績
-                                                if (subjectScore_dict.ContainsKey(subjectscore.Value.Domain + SubjectCourseNum + "_科目成績_" + (grade * 2)))
+                                                if (SubjectCourseDict[subjectscore.Value.Domain].ContainsKey(subjectscore.Value.Subject))
                                                 {
-                                                    subjectScore_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目成績_" + (grade * 2)] = subjectscore.Value.Score;
-                                                }
+                                                    SubjectCourseNum = SubjectCourseDict[subjectscore.Value.Domain][subjectscore.Value.Subject];
+                                                    //紀錄成績
+                                                    if (subjectScore_dict.ContainsKey(subjectscore.Value.Domain + SubjectCourseNum + "_科目成績_" + (grade * 2)))
+                                                    {
+                                                        subjectScore_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目成績_" + (grade * 2)] = subjectscore.Value.Score;
+                                                    }
 
-                                                //換算等第
-                                                if (subjectLevel_dict.ContainsKey(subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2)))
-                                                {
-                                                    subjectLevel_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2)] = ScoreTolevel(subjectscore.Value.Score);
+                                                    //換算等第
+                                                    if (subjectLevel_dict.ContainsKey(subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2)))
+                                                    {
+                                                        subjectLevel_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2)] = ScoreTolevel(subjectscore.Value.Score);
+                                                    }
                                                 } 
                                             }
                                         }
@@ -2140,7 +2157,8 @@ namespace JHEvaluation.StudentScoreSummaryReport
             }
 
             //選擇 目前的樣板
-            document = Preference.Template.ToDocument();
+            document = new Document(Preference.Template.GetStream());
+            //document = Preference.Template.ToDocument();
 
             //執行 合併列印
             document.MailMerge.Execute(table);
@@ -2287,9 +2305,9 @@ namespace JHEvaluation.StudentScoreSummaryReport
                         string XmlFileName = fileinfo.FullName.Substring(0, fileinfo.FullName.Length - fileinfo.Extension.Length) + ".xml";
                         string PDFFileName = fileinfo.FullName.Substring(0, fileinfo.FullName.Length - fileinfo.Extension.Length) + ".pdf";
 
-                        document.Save(XmlFileName, Aspose.Words.SaveFormat.AsposePdf);
+                        document.Save(XmlFileName, Aspose.Words.SaveFormat.Pdf);
 
-                        Aspose.Pdf.Pdf pdf1 = new Aspose.Pdf.Pdf();
+                        Aspose.Pdf.Generator.Pdf pdf1 = new Aspose.Pdf.Generator.Pdf();
 
                         pdf1.BindXML(XmlFileName, null);
                         pdf1.Save(PDFFileName);

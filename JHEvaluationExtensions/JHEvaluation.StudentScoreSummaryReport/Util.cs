@@ -5,11 +5,14 @@ using System.Windows.Forms;
 using JHEvaluation.ScoreCalculation;
 using JHSchool.Data;
 using Aspose.Words;
+using Aspose.Words.Tables;
 using FISCA.Presentation.Controls;
 using Campus.Rating;
 using System.Globalization;
 using FISCA.Data;
 using System.Data;
+using System.IO;
+
 namespace JHEvaluation.StudentScoreSummaryReport
 {
     internal static class Util
@@ -149,45 +152,42 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
         public static void Save(Document doc, string fileName, bool convertToPDF)
         {
-            //SaveFileDialog sdf = new SaveFileDialog();
-
-            //if (convertToPDF)
-            //{
-            //    sdf.Filter = "PDF 檔案(*.pdf)|*.pdf";
-            //    sdf.FileName = fileName + ".pdf";
-            //}
-            //else
-            //{
-            //    sdf.Filter = "Word 檔案(*.doc)|*.doc";
-            //    sdf.FileName = fileName + ".doc";
-            //}
-
-            //if (sdf.ShowDialog() == DialogResult.OK)
-            //{
             try
             {
-                //doc.Save(fileName, SaveFormat.Doc);
-                Campus.Report.ReportSaver.SaveDocument(doc, fileName,
-                    convertToPDF ? Campus.Report.ReportSaver.OutputType.PDF : Campus.Report.ReportSaver.OutputType.Word);
+                if (doc != null)
+                {
+                    string path = "";
+                    if (convertToPDF)
+                    {
+                        path = $"{Application.StartupPath}\\Reports\\{fileName}.pdf";
+                    }
+                    else
+                    {
+                        path = $"{Application.StartupPath}\\Reports\\{fileName}.docx";
+                    }
+
+                    int i = 1;
+                    while (File.Exists(path))
+                    {
+                        string newPath = $"{Path.GetDirectoryName(path)}\\{fileName}{i++}{Path.GetExtension(path)}";
+                        path = newPath;
+                    }
+
+                    doc.Save(path, convertToPDF ? SaveFormat.Pdf : SaveFormat.Docx);
+
+                    DialogResult dialogResult = MessageBox.Show($"{path}\n{fileName}產生完成，是否立即開啟？", "訊息", MessageBoxButtons.YesNo);
+
+                    if (DialogResult.Yes == dialogResult)
+                    {
+                        System.Diagnostics.Process.Start(path);
+                    }
+                }
             }
             catch (Exception ex)
             {
                 MsgBox.Show("儲存失敗。" + ex.Message);
                 return;
             }
-
-            //try
-            //{
-            //    //if (MsgBox.Show("排名完成，是否立刻開啟？", MessageBoxButtons.YesNo) == DialogResult.Yes)
-            //    //{
-            //    //System.Diagnostics.Process.Start(sdf.FileName);
-            //    //}
-            //}
-            //catch (Exception ex)
-            //{
-            //    MsgBox.Show("開啟失敗。" + ex.Message);
-            //}
-            //}
         }
 
         public static string GetGradeyearString(string gradeYear)

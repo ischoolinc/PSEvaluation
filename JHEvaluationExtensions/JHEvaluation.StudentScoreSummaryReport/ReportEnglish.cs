@@ -10,6 +10,7 @@ using Campus.Rating;
 using System.Xml;
 using System.Globalization;
 using Aspose.Words.Drawing;
+using Aspose.Words.Tables;
 using System.Drawing;
 using Subj = JHSchool.Evaluation.Subject;
 
@@ -19,7 +20,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
     {
         private const int DataRowOffset = 2;
 
-        private ReportPreference PrintSetting { get; set; }
+        private static ReportPreference PrintSetting { get; set; }
 
         private List<ReportStudent> Students { get; set; }
 
@@ -30,12 +31,12 @@ namespace JHEvaluation.StudentScoreSummaryReport
         /// </summary>
         private Dictionary<string, Document> _DocDict = new Dictionary<string, Document>();
 
-        private List<string> DetailDomain { get; set; }
+        private static List<string> DetailDomain { get; set; }
 
-        private SubjDomainEngNameMapping _SubjDomainEngNameMapping;
+        private static SubjDomainEngNameMapping _SubjDomainEngNameMapping;
 
         //英文成績單用。
-        private bool PrintScore { get; set; }
+        private static bool PrintScore { get; set; }
 
         public ReportEnglish(List<ReportStudent> students, ReportPreference printSetting)
         {
@@ -70,7 +71,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
             PrintScore = printScore;
             Document doc = PrintSetting.Template.ToDocument();
 
-            doc.MailMerge.MergeField += new Aspose.Words.Reporting.MergeFieldEventHandler(MailMerge_MergeField);
+            doc.MailMerge.FieldMergingCallback = new MailMerge_MergeField();
 
             doc.MailMerge.Execute(new MergeDataSource(Students, PrintSetting));           
 
@@ -94,7 +95,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
                 List<ReportStudent> rps = new List<ReportStudent>();
                 rps.Add(rs);
-                doc.MailMerge.MergeField += new Aspose.Words.Reporting.MergeFieldEventHandler(MailMerge_MergeField);
+                doc.MailMerge.FieldMergingCallback = new MailMerge_MergeField();
 
                 string fileName = "";
                 fileName = rs.StudentNumber;
@@ -121,109 +122,117 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
 
         /// 2016/4/18  穎驊同感...  好險目前他不用太懂...
-        private void MailMerge_MergeField(object sender, MergeFieldEventArgs e)
+        class MailMerge_MergeField : IFieldMergingCallback
         {
-            //不是 Fix 開頭的合併欄位不處理。
-            if (!e.FieldName.ToUpper().StartsWith("Fix".ToUpper())) return;
-
-            DocumentBuilder builder = new DocumentBuilder(e.Document);
-
-            ReportStudent student = e.FieldValue as ReportStudent;
-
-            //如果合併值不是 ReportStudent 就跳過...意思是有問題...。
-            if (student == null) return;
-
-            builder.MoveToField(e.Field, true);
-            e.Field.Remove();
-
-            if (e.FieldName == "Fix:科目資訊")
+            void IFieldMergingCallback.FieldMerging(FieldMergingArgs e)
             {
-                #region 列印年級學期資訊(有點複雜)。
-                SemesterDataCollection semses = student.SHistory.GetGradeYearSemester();
-                //Row SemesterRow = builder.CurrentParagraph.ParentNode.ParentNode.NextSibling as Row; //下一個 Row。
-                //Paragraph originParagraph = builder.CurrentParagraph;
+                //不是 Fix 開頭的合併欄位不處理。
+                if (!e.FieldName.ToUpper().StartsWith("Fix".ToUpper())) return;
 
-                int count = 0;//, offset = 1;
+                DocumentBuilder builder = new DocumentBuilder(e.Document);
 
-                foreach (SemesterData each in semses)
+                ReportStudent student = e.FieldValue as ReportStudent;
+
+                //如果合併值不是 ReportStudent 就跳過...意思是有問題...。
+                if (student == null) return;
+
+                builder.MoveToField(e.Field, true);
+                e.Field.Remove();
+
+                if (e.FieldName == "Fix:科目資訊")
                 {
-                    //string currentGradeyear = Util.GetGradeyearString(each.GradeYear.ToString());
+                    #region 列印年級學期資訊(有點複雜)。
+                    SemesterDataCollection semses = student.SHistory.GetGradeYearSemester();
+                    //Row SemesterRow = builder.CurrentParagraph.ParentNode.ParentNode.NextSibling as Row; //下一個 Row。
+                    //Paragraph originParagraph = builder.CurrentParagraph;
 
-                    ////如果沒有年級，就跳過。
-                    //if (string.IsNullOrEmpty(currentGradeyear)) continue;
+                    int count = 0;//, offset = 1;
 
-                    //builder.Write(currentGradeyear + "年級");
-                    Paragraph nextPh = Util.NextCell(builder.CurrentParagraph);
-                    if (nextPh == null) break; //沒有下一個 Cell ，就不印資料了。
-                    builder.MoveTo(nextPh);
+                    foreach (SemesterData each in semses)
+                    {
+                        //string currentGradeyear = Util.GetGradeyearString(each.GradeYear.ToString());
 
-                    //Paragraph resetParagraph = builder.CurrentParagraph;
-                    //SemesterRow.Cells[count + offset].Write(builder, GetSemesterString(each));
+                        ////如果沒有年級，就跳過。
+                        //if (string.IsNullOrEmpty(currentGradeyear)) continue;
 
-                    SemesterData semester = new SemesterData(0, each.SchoolYear, each.Semester);
-                    if (!student.HeaderList.ContainsKey(semester))
-                        student.HeaderList.AddRaw(each, count); //不要懷疑，這是對的。
+                        //builder.Write(currentGradeyear + "年級");
+                        Paragraph nextPh = Util.NextCell(builder.CurrentParagraph);
+                        if (nextPh == null) break; //沒有下一個 Cell ，就不印資料了。
+                        builder.MoveTo(nextPh);
 
-                    //builder.MoveTo(resetParagraph);
-                    count++;
-                }
+                        //Paragraph resetParagraph = builder.CurrentParagraph;
+                        //SemesterRow.Cells[count + offset].Write(builder, GetSemesterString(each));
 
-                //builder.MoveTo(originParagraph);
-                //Paragraph nextParagrap = originParagraph;
-                //string previousGradeyear = GetText(originParagraph);
-                //while ((nextParagrap = Util.NextCell(nextParagrap)) != null)
-                //{
-                //    if (GetText(nextParagrap) == previousGradeyear)
-                //        (nextParagrap.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.Previous;
+                        SemesterData semester = new SemesterData(0, each.SchoolYear, each.Semester);
+                        if (!student.HeaderList.ContainsKey(semester))
+                            student.HeaderList.AddRaw(each, count); //不要懷疑，這是對的。
 
-                //    previousGradeyear = GetText(nextParagrap);
-                //}
-                #endregion
+                        //builder.MoveTo(resetParagraph);
+                        count++;
+                    }
 
-                #region 列印科目資料(爆炸複雜)
+                    //builder.MoveTo(originParagraph);
+                    //Paragraph nextParagrap = originParagraph;
+                    //string previousGradeyear = GetText(originParagraph);
+                    //while ((nextParagrap = Util.NextCell(nextParagrap)) != null)
+                    //{
+                    //    if (GetText(nextParagrap) == previousGradeyear)
+                    //        (nextParagrap.ParentNode as Cell).CellFormat.HorizontalMerge = CellMerge.Previous;
 
-                Row template = builder.CurrentParagraph.ParentNode.ParentNode as Row;
-                Table table = template.ParentNode as Table;
+                    //    previousGradeyear = GetText(nextParagrap);
+                    //}
+                    #endregion
 
-                if (PrintSetting.ListMethod == ListMethod.DomainOnly)
-                    PrintDomainOnly(builder, student, template, table);
-                else
-                    PrintSubjectOnly(builder, student, template, table);
+                    #region 列印科目資料(爆炸複雜)
 
-                //設定表格下方線寬。
-                double borderWidth = (template.NextSibling as Row).Cells[0].CellFormat.Borders.Bottom.LineWidth;
-                foreach (Cell each in (template.PreviousSibling as Row).Cells)
-                    each.CellFormat.Borders.Bottom.LineWidth = borderWidth;
+                    Row template = builder.CurrentParagraph.ParentNode.ParentNode as Row;
+                    Table table = template.ParentNode as Table;
 
-                template.NextSibling.Remove();
-                template.Remove();
-                #endregion
-            }
-            if (e.FieldName == "Fix:照片")
-            {
-                if (student.GraduatePhoto != null)
-                {
-                    Shape photo = builder.InsertImage(student.GraduatePhoto);
-                    Cell cell = builder.CurrentParagraph.ParentNode as Cell;
-                    Row row = cell.ParentRow;
-
-                    double rectHeight = row.RowFormat.Height, rectWidth = cell.CellFormat.Width;
-
-                    double heightRate = (rectHeight / photo.Height);
-                    double widthRate = (rectWidth / photo.Width);
-                    double rate = 0;
-                    if (heightRate < widthRate)
-                        rate = heightRate;
+                    if (PrintSetting.ListMethod == ListMethod.DomainOnly)
+                        PrintDomainOnly(builder, student, template, table);
                     else
-                        rate = widthRate;
+                        PrintSubjectOnly(builder, student, template, table);
 
-                    photo.Width = photo.Width * rate;
-                    photo.Height = photo.Height * rate;
+                    //設定表格下方線寬。
+                    double borderWidth = (template.NextSibling as Row).Cells[0].CellFormat.Borders.Bottom.LineWidth;
+                    foreach (Cell each in (template.PreviousSibling as Row).Cells)
+                        each.CellFormat.Borders.Bottom.LineWidth = borderWidth;
+
+                    template.NextSibling.Remove();
+                    template.Remove();
+                    #endregion
                 }
+                if (e.FieldName == "Fix:照片")
+                {
+                    if (student.GraduatePhoto != null)
+                    {
+                        Shape photo = builder.InsertImage(student.GraduatePhoto);
+                        Cell cell = builder.CurrentParagraph.ParentNode as Cell;
+                        Row row = cell.ParentRow;
+
+                        double rectHeight = row.RowFormat.Height, rectWidth = cell.CellFormat.Width;
+
+                        double heightRate = (rectHeight / photo.Height);
+                        double widthRate = (rectWidth / photo.Width);
+                        double rate = 0;
+                        if (heightRate < widthRate)
+                            rate = heightRate;
+                        else
+                            rate = widthRate;
+
+                        photo.Width = photo.Width * rate;
+                        photo.Height = photo.Height * rate;
+                    }
+                }
+            }
+
+            void IFieldMergingCallback.ImageFieldMerging(ImageFieldMergingArgs e)
+            {
+
             }
         }
 
-        private void PrintSubjectOnly(DocumentBuilder builder, ReportStudent student, Row template, Table table)
+        private static void PrintSubjectOnly(DocumentBuilder builder, ReportStudent student, Row template, Table table)
         {
             #region 列印科目
             UniqueSet<RowHeader> RowIndexs = new UniqueSet<RowHeader>();
@@ -371,7 +380,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
             #endregion
         }
 
-        private void PrintDomainOnly(DocumentBuilder builder, ReportStudent student, Row template, Table table)
+        private static void PrintDomainOnly(DocumentBuilder builder, ReportStudent student, Row template, Table table)
         {
             #region 列印領域
             UniqueSet<RowHeader> RowIndexs = new UniqueSet<RowHeader>();
@@ -557,7 +566,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
             #endregion
         }
 
-        private bool IsFlexible(string domainName)
+        private static bool IsFlexible(string domainName)
         {
             if (string.IsNullOrEmpty(domainName))
                 return true;
@@ -573,7 +582,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
         /// </summary>
         /// <param name="list"></param>
         /// <returns></returns>
-        private List<RowHeader> SortHeader(List<RowHeader> list)
+        private static List<RowHeader> SortHeader(List<RowHeader> list)
         {
             List<RowHeader> domains = new List<RowHeader>();
             List<RowHeader> subjects = new List<RowHeader>();
@@ -763,6 +772,11 @@ namespace JHEvaluation.StudentScoreSummaryReport
             }
 
             public string TableName { get { return string.Empty; } }
+
+            public IMailMergeDataSource GetChildDataSource(string sourceName)
+            {
+                return null;
+            }
 
             #endregion
         }

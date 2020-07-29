@@ -62,19 +62,19 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Aspose.Cells, Version=4.3.0.0, Culture=neutral, PublicKeyToken=9a40d5a4b59e5256, processorArchitecture=MSIL">
+    <Reference Include="Aspose.Cells_201402, Version=7.7.1.0, Culture=neutral, PublicKeyToken=716fcc553a201e56, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Library\Aspose.Cells.dll</HintPath>
+      <HintPath>Library\Aspose.Cells_201402.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Aspose.Pdf, Version=3.7.0.0, Culture=neutral, PublicKeyToken=716fcc553a201e56, processorArchitecture=MSIL">
+    <Reference Include="Aspose.Pdf_201402, Version=8.8.0.0, Culture=neutral, PublicKeyToken=47b2d0fcacdd3eb6, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Library\Aspose.Pdf.dll</HintPath>
+      <HintPath>Library\Aspose.Pdf_201402.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Aspose.Words, Version=4.4.0.0, Culture=neutral, PublicKeyToken=716fcc553a201e56, processorArchitecture=MSIL">
+    <Reference Include="Aspose.Words_201402, Version=14.1.0.0, Culture=neutral, PublicKeyToken=716fcc553a201e56, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Library\Aspose.Words.dll</HintPath>
+      <HintPath>Library\Aspose.Words_201402.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Campus, Version=2.0.0.8, Culture=neutral, processorArchitecture=MSIL">
@@ -312,9 +312,12 @@
   <ItemGroup />
   <ItemGroup>
     <Content Include="Library\Aspose.Cells.dll" />
+    <Content Include="Library\Aspose.Cells_201402.dll" />
     <Content Include="Library\Aspose.Pdf.dll" />
     <Content Include="Library\Aspose.Pdf.xml" />
+    <Content Include="Library\Aspose.Pdf_201402.dll" />
     <Content Include="Library\Aspose.Words.dll" />
+    <Content Include="Library\Aspose.Words_201402.dll" />
     <Content Include="Library\Campus.dll" />
     <Content Include="Library\Campus.Report.dll" />
     <Content Include="Library\DevComponents.DotNetBar2.dll" />
