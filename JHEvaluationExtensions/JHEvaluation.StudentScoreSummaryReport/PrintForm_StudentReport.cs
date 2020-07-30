@@ -797,6 +797,12 @@ namespace JHEvaluation.StudentScoreSummaryReport
             table.Columns.Add("數學4_科目名稱");
             table.Columns.Add("數學5_科目名稱");
             table.Columns.Add("數學6_科目名稱");
+            table.Columns.Add("生活課程1_科目名稱");
+            table.Columns.Add("生活課程2_科目名稱");
+            table.Columns.Add("生活課程3_科目名稱");
+            table.Columns.Add("生活課程4_科目名稱");
+            table.Columns.Add("生活課程5_科目名稱");
+            table.Columns.Add("生活課程6_科目名稱");
             table.Columns.Add("自然科學1_科目名稱");
             table.Columns.Add("自然科學2_科目名稱");
             table.Columns.Add("自然科學3_科目名稱");
@@ -1067,6 +1073,12 @@ namespace JHEvaluation.StudentScoreSummaryReport
             subjectScoreType_list.Add("數學4_科目成績_");
             subjectScoreType_list.Add("數學5_科目成績_");
             subjectScoreType_list.Add("數學6_科目成績_");
+            subjectScoreType_list.Add("生活課程1_科目成績_");
+            subjectScoreType_list.Add("生活課程2_科目成績_");
+            subjectScoreType_list.Add("生活課程3_科目成績_");
+            subjectScoreType_list.Add("生活課程4_科目成績_");
+            subjectScoreType_list.Add("生活課程5_科目成績_");
+            subjectScoreType_list.Add("生活課程6_科目成績_");
             subjectScoreType_list.Add("自然科學1_科目成績_");
             subjectScoreType_list.Add("自然科學2_科目成績_");
             subjectScoreType_list.Add("自然科學3_科目成績_");
@@ -1145,6 +1157,12 @@ namespace JHEvaluation.StudentScoreSummaryReport
             subjectLevelType_list.Add("數學4_科目等第_");
             subjectLevelType_list.Add("數學5_科目等第_");
             subjectLevelType_list.Add("數學6_科目等第_");
+            subjectLevelType_list.Add("生活課程1_科目等第_");
+            subjectLevelType_list.Add("生活課程2_科目等第_");
+            subjectLevelType_list.Add("生活課程3_科目等第_");
+            subjectLevelType_list.Add("生活課程4_科目等第_");
+            subjectLevelType_list.Add("生活課程5_科目等第_");
+            subjectLevelType_list.Add("生活課程6_科目等第_");
             subjectLevelType_list.Add("自然科學1_科目等第_");
             subjectLevelType_list.Add("自然科學2_科目等第_");
             subjectLevelType_list.Add("自然科學3_科目等第_");
@@ -1614,6 +1632,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 {
                     { "語文", new Dictionary<string, int>() }
                     , { "數學", new Dictionary<string, int>() }
+                    , { "生活課程", new Dictionary<string, int>() }
                     , { "自然科學", new Dictionary<string, int>() }
                     , { "科技", new Dictionary<string, int>() }
                     , { "社會", new Dictionary<string, int>() }

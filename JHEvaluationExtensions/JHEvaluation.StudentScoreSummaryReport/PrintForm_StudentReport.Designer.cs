@@ -159,10 +159,10 @@
             this.rtnWord.Checked = true;
             this.rtnWord.Location = new System.Drawing.Point(42, 3);
             this.rtnWord.Name = "rtnWord";
-            this.rtnWord.Size = new System.Drawing.Size(102, 21);
+            this.rtnWord.Size = new System.Drawing.Size(108, 21);
             this.rtnWord.TabIndex = 0;
             this.rtnWord.TabStop = true;
-            this.rtnWord.Text = "Word (*.doc)";
+            this.rtnWord.Text = "Word (*.docx)";
             this.rtnWord.UseVisualStyleBackColor = true;
             // 
             // groupPanel4
