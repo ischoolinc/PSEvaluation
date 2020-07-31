@@ -557,6 +557,89 @@ namespace JHEvaluation.StudentScoreSummaryReport
             table.Columns.Add("領域_生活課程_等第_12");
 
 
+            table.Columns.Add("領域_自然科學_成績_1");
+            table.Columns.Add("領域_自然科學_成績_2");
+            table.Columns.Add("領域_自然科學_成績_3");
+            table.Columns.Add("領域_自然科學_成績_4");
+            table.Columns.Add("領域_自然科學_成績_5");
+            table.Columns.Add("領域_自然科學_成績_6");
+            table.Columns.Add("領域_自然科學_成績_7");
+            table.Columns.Add("領域_自然科學_成績_8");
+            table.Columns.Add("領域_自然科學_成績_9");
+            table.Columns.Add("領域_自然科學_成績_10");
+            table.Columns.Add("領域_自然科學_成績_11");
+            table.Columns.Add("領域_自然科學_成績_12");
+
+
+            table.Columns.Add("領域_自然科學_等第_1");
+            table.Columns.Add("領域_自然科學_等第_2");
+            table.Columns.Add("領域_自然科學_等第_3");
+            table.Columns.Add("領域_自然科學_等第_4");
+            table.Columns.Add("領域_自然科學_等第_5");
+            table.Columns.Add("領域_自然科學_等第_6");
+            table.Columns.Add("領域_自然科學_等第_7");
+            table.Columns.Add("領域_自然科學_等第_8");
+            table.Columns.Add("領域_自然科學_等第_9");
+            table.Columns.Add("領域_自然科學_等第_10");
+            table.Columns.Add("領域_自然科學_等第_11");
+            table.Columns.Add("領域_自然科學_等第_12");
+
+
+            table.Columns.Add("領域_科技_成績_1");
+            table.Columns.Add("領域_科技_成績_2");
+            table.Columns.Add("領域_科技_成績_3");
+            table.Columns.Add("領域_科技_成績_4");
+            table.Columns.Add("領域_科技_成績_5");
+            table.Columns.Add("領域_科技_成績_6");
+            table.Columns.Add("領域_科技_成績_7");
+            table.Columns.Add("領域_科技_成績_8");
+            table.Columns.Add("領域_科技_成績_9");
+            table.Columns.Add("領域_科技_成績_10");
+            table.Columns.Add("領域_科技_成績_11");
+            table.Columns.Add("領域_科技_成績_12");
+
+
+            table.Columns.Add("領域_科技_等第_1");
+            table.Columns.Add("領域_科技_等第_2");
+            table.Columns.Add("領域_科技_等第_3");
+            table.Columns.Add("領域_科技_等第_4");
+            table.Columns.Add("領域_科技_等第_5");
+            table.Columns.Add("領域_科技_等第_6");
+            table.Columns.Add("領域_科技_等第_7");
+            table.Columns.Add("領域_科技_等第_8");
+            table.Columns.Add("領域_科技_等第_9");
+            table.Columns.Add("領域_科技_等第_10");
+            table.Columns.Add("領域_科技_等第_11");
+            table.Columns.Add("領域_科技_等第_12");
+
+
+            table.Columns.Add("領域_藝術_成績_1");
+            table.Columns.Add("領域_藝術_成績_2");
+            table.Columns.Add("領域_藝術_成績_3");
+            table.Columns.Add("領域_藝術_成績_4");
+            table.Columns.Add("領域_藝術_成績_5");
+            table.Columns.Add("領域_藝術_成績_6");
+            table.Columns.Add("領域_藝術_成績_7");
+            table.Columns.Add("領域_藝術_成績_8");
+            table.Columns.Add("領域_藝術_成績_9");
+            table.Columns.Add("領域_藝術_成績_10");
+            table.Columns.Add("領域_藝術_成績_11");
+            table.Columns.Add("領域_藝術_成績_12");
+
+
+            table.Columns.Add("領域_藝術_等第_1");
+            table.Columns.Add("領域_藝術_等第_2");
+            table.Columns.Add("領域_藝術_等第_3");
+            table.Columns.Add("領域_藝術_等第_4");
+            table.Columns.Add("領域_藝術_等第_5");
+            table.Columns.Add("領域_藝術_等第_6");
+            table.Columns.Add("領域_藝術_等第_7");
+            table.Columns.Add("領域_藝術_等第_8");
+            table.Columns.Add("領域_藝術_等第_9");
+            table.Columns.Add("領域_藝術_等第_10");
+            table.Columns.Add("領域_藝術_等第_11");
+            table.Columns.Add("領域_藝術_等第_12");
+
 
             table.Columns.Add("領域_自然與生活科技_成績_1");
             table.Columns.Add("領域_自然與生活科技_成績_2");
@@ -1032,6 +1115,9 @@ namespace JHEvaluation.StudentScoreSummaryReport
             domainScoreType_list.Add("領域_語文_成績_");
             domainScoreType_list.Add("領域_數學_成績_");
             domainScoreType_list.Add("領域_生活課程_成績_");
+            domainScoreType_list.Add("領域_自然科學_成績_");
+            domainScoreType_list.Add("領域_科技_成績_");
+            domainScoreType_list.Add("領域_藝術_成績_");
             domainScoreType_list.Add("領域_自然與生活科技_成績_");
             domainScoreType_list.Add("領域_藝術與人文_成績_");
             domainScoreType_list.Add("領域_社會_成績_");
@@ -1048,6 +1134,9 @@ namespace JHEvaluation.StudentScoreSummaryReport
             domainLevelType_list.Add("領域_語文_等第_");
             domainLevelType_list.Add("領域_數學_等第_");
             domainLevelType_list.Add("領域_生活課程_等第_");
+            domainScoreType_list.Add("領域_自然科學_等第_");
+            domainScoreType_list.Add("領域_科技_等第_");
+            domainScoreType_list.Add("領域_藝術_等第_");
             domainLevelType_list.Add("領域_自然與生活科技_等第_");
             domainLevelType_list.Add("領域_藝術與人文_等第_");
             domainLevelType_list.Add("領域_社會_等第_");
