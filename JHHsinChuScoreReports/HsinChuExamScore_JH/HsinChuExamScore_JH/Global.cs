@@ -51,10 +51,12 @@ namespace HsinChuExamScore_JH
             retVal.Add("語文");
             retVal.Add("數學");
             retVal.Add("社會");
+            retVal.Add("自然科學");
             retVal.Add("自然與生活科技");
-            retVal.Add("健康與體育");
+            retVal.Add("藝術");
             retVal.Add("藝術與人文");
             retVal.Add("綜合活動");
+            retVal.Add("健康與體育");
             retVal.Add("彈性課程");
             return retVal;
         }

@@ -1152,8 +1152,8 @@ namespace HsinChuExamScore_JH
                         subjGradeDNList.Add(subjName);
                 }
 
-                subjGradeDNList.Sort(new StringComparer("國文"
-                                , "英文"
+                subjGradeDNList.Sort(new StringComparer("國文", "英語文"
+                                , "英文", "英語文"
                                 , "數學"
                                 , "理化"
                                 , "生物"
@@ -1857,8 +1857,8 @@ namespace HsinChuExamScore_JH
             foreach (var list in _ExamSubjectFull.Values)
             {
                 #region 排序
-                list.Sort(new StringComparer("國文"
-                                , "英文"
+                list.Sort(new StringComparer("國文", "國語文"
+                                , "英文",  "英語文"
                                 , "數學"
                                 , "理化"
                                 , "生物"
