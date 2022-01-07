@@ -23,7 +23,9 @@ namespace StudentSemesterScoreNotification
             value.Add("英語");
             value.Add("數學");
             value.Add("社會");
+            value.Add("自然科學");
             value.Add("自然與生活科技");
+            value.Add("藝術");
             value.Add("藝術與人文");
             value.Add("健康與體育");
             value.Add("綜合活動");

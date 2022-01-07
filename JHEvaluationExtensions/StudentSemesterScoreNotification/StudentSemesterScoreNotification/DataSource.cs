@@ -453,7 +453,9 @@ namespace StudentSemesterScoreNotification
                 domainList.Add("英語", 7000);
                 domainList.Add("數學", 6000);
                 domainList.Add("社會", 5000);
+                domainList.Add("自然科學", 4500);
                 domainList.Add("自然與生活科技", 4000);
+                domainList.Add("藝術", 3500);
                 domainList.Add("藝術與人文", 3000);
                 domainList.Add("健康與體育", 2000);
                 domainList.Add("綜合活動", 1000);
