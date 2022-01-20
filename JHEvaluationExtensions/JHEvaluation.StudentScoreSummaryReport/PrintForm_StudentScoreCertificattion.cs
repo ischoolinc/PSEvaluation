@@ -1460,19 +1460,19 @@ namespace JHEvaluation.StudentScoreSummaryReport
         private string ScoreTolevel(decimal? d)
         {
             string level = "";
-            if (d > 90)
+            if (d >= 90)
             {
                 level = "優";
             }
-            else if (d > 80 && d < 90)
+            else if (d >= 80 && d < 90)
             {
                 level = "甲";
             }
-            else if (d > 70 && d < 80)
+            else if (d >= 70 && d < 80)
             {
                 level = "乙";
             }
-            else if (d > 60 && d < 70)
+            else if (d >= 60 && d < 70)
             {
                 level = "丙";
             }
