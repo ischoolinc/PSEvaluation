@@ -1698,22 +1698,51 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
                     }
 
+
+                }
+
+
+                // 2022-02 Cynthia 為了讓全勤也有學習歷程的缺曠變數也可產生0
+                foreach (var item in shr_dict[stuID].SemesterHistoryItems)
+                {
                     foreach (string key in arStatistic_dict.Keys)
                     {
-                        arStatistic_dict_days.Add(key, arStatistic_dict[key]);
-                    }
+                        string[] arrkey = key.Split('_');
+                        {
+                            if (item.Semester == 1)
+                            {
+                                if (arrkey[1] == (item.GradeYear * 2 - 1).ToString())
+                                    if (!arStatistic_dict_days.ContainsKey(key))
+                                        arStatistic_dict_days.Add(key, arStatistic_dict[key]);
+                            }
+                            if (item.Semester == 2)
+                            {
+                                if (arrkey[1] == (item.GradeYear * 2).ToString())
+                                    if (!arStatistic_dict_days.ContainsKey(key))
+                                        arStatistic_dict_days.Add(key, arStatistic_dict[key]);
+                            }
+                        }
 
-                    //真正的填值，填日數，所以要做節次轉換
-                    foreach (string key in arStatistic_dict_days.Keys)
-                    {
-                        // 一天幾節課
-                        int periodsADay = AbsencePeriod.Count;
 
-                        row[key] = Math.Round(arStatistic_dict_days[key] / periodsADay, 2);
+
+
                     }
                 }
 
 
+                //foreach (string key in arStatistic_dict.Keys)
+                //{
+                //    arStatistic_dict_days.Add(key, arStatistic_dict[key]);
+                //}
+
+                //真正的填值，填日數，所以要做節次轉換
+                foreach (string key in arStatistic_dict_days.Keys)
+                {
+                    // 一天幾節課
+                    int periodsADay = AbsencePeriod.Count;
+
+                    row[key] = Math.Round(arStatistic_dict_days[key] / periodsADay, 2);
+                }
                 // 學期成績(包含領域、科目)      
 
                 //一般科目 科目名稱與科目編號對照表
@@ -1768,7 +1797,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
                                             row[subjectscore.Value.Domain + subjectCourseCount + "_科目名稱"] = subjectscore.Value.Subject;
 
-                                            SubjectCourseDict[subjectscore.Value.Domain].Add(subjectscore.Value.Subject, subjectCourseCount); 
+                                            SubjectCourseDict[subjectscore.Value.Domain].Add(subjectscore.Value.Subject, subjectCourseCount);
                                         }
                                     }
                                 }
@@ -1901,7 +1930,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                                     {
                                                         subjectLevel_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2 - 1)] = ScoreTolevel(subjectscore.Value.Score);
                                                     }
-                                                } 
+                                                }
                                             }
 
                                         }
@@ -1997,7 +2026,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                                     {
                                                         subjectLevel_dict[subjectscore.Value.Domain + SubjectCourseNum + "_科目等第_" + (grade * 2)] = ScoreTolevel(subjectscore.Value.Score);
                                                     }
-                                                } 
+                                                }
                                             }
                                         }
 
