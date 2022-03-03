@@ -653,6 +653,16 @@ namespace JHEvaluation.StudentScoreSummaryReport
             table.Columns.Add("科目_英語_等第_11");
             table.Columns.Add("科目_英語_等第_12");
 
+            for (int i = 1; i <= 10; i++)
+            {
+                for (int a = 1; a <= 12; a++)
+                {
+                    table.Columns.Add("彈性課程" + i + "_科目等第_" + a);
+                    table.Columns.Add("彈性課程" + i + "_科目成績_" + a);
+                }
+                table.Columns.Add("彈性課程" + i + "_科目名稱");
+            }
+
 
             #endregion
 
@@ -799,7 +809,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
             #endregion
 
             #region 匯出日期
-            table.Columns.Add("匯出日期"); 
+            table.Columns.Add("匯出日期");
             #endregion
 
             #endregion
@@ -860,6 +870,12 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
             subjectScoreType_list.Add("科目_國語_成績_");
             subjectScoreType_list.Add("科目_英語_成績_");
+
+            for (int i = 1; i <= 10; i++)
+            {
+                subjectScoreType_list.Add("彈性課程" + i + "_科目成績_");
+            }
+
             #endregion
 
             #region 整理所有的科目_OO_等第
@@ -868,6 +884,11 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
             subjectLevelType_list.Add("科目_國語_等第_");
             subjectLevelType_list.Add("科目_英語_等第_");
+
+            for (int i = 1; i <= 10; i++)
+            {
+                subjectLevelType_list.Add("彈性課程" + i + "_科目等第_");
+            }
             #endregion
 
             // 領域分數、等第 的對照
@@ -980,7 +1001,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
                     // 轉換出生時間 成 民國 九十五年一月十九日 的格式
                     row["出生日期"] = @"民國" + EastAsiaNumericFormatter.FormatWithCulture("Ln", (birthday.Year - 1911), null, new CultureInfo("zh-tw")) + "年"
-                       +EastAsiaNumericFormatter.FormatWithCulture("Ln", (birthday.Month), null, new CultureInfo("zh-tw")) + "月" 
+                       + EastAsiaNumericFormatter.FormatWithCulture("Ln", (birthday.Month), null, new CultureInfo("zh-tw")) + "月"
                         + EastAsiaNumericFormatter.FormatWithCulture("Ln", (birthday.Day), null, new CultureInfo("zh-tw")) + "日";
 
 
@@ -1184,6 +1205,52 @@ namespace JHEvaluation.StudentScoreSummaryReport
                     }
                 }
 
+                // 彈性課程 科目名稱 與彈性課程編號的對照
+                Dictionary<string, int> AlternativeCourseDict = new Dictionary<string, int>();
+
+                // 先統計 該學生 在全學年間 有的 彈性課程科目
+                if (jssr_dict.ContainsKey(stuID))
+                {
+                    // 彈性課程記數
+                    int AlternativeCourse = 0;
+
+                    for (int grade = 1; grade <= 6; grade++)
+                    {
+                        foreach (JHSemesterScoreRecord jssr in jssr_dict[stuID])
+                        {
+                            if (jssr.SchoolYear == schoolyear_grade_dict[grade])
+                            {
+                                foreach (var subjectscore in jssr.Subjects)
+                                {
+                                    // 領域為彈性課程 、或是沒有領域的科目成績 算到彈性課程科目處理
+                                    if (subjectscore.Value.Domain == "彈性課程" || subjectscore.Value.Domain == "彈性學習" || subjectscore.Value.Domain == "")
+                                    {
+                                        // 對照科目名稱如果已經有，跳過
+                                        if (AlternativeCourseDict.ContainsKey(subjectscore.Value.Subject))
+                                        {
+                                            continue;
+                                        }
+
+                                        AlternativeCourse++;
+
+                                        // 目前僅先支援 一個學生在六年之中有 10個 彈性課程
+                                        if (AlternativeCourse > 10)
+                                        {
+                                            MessageBox.Show("彈性科目數超過可支援數量，超過的將不會顯示在學籍表中");
+                                            break;
+                                        }
+
+                                        row["彈性課程" + AlternativeCourse + "_科目名稱"] = subjectscore.Value.Subject;
+
+                                        AlternativeCourseDict.Add(subjectscore.Value.Subject, AlternativeCourse);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+
 
                 // 學期成績(包含領域、科目)
                 if (jssr_dict.ContainsKey(stuID))
@@ -1215,6 +1282,35 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                     //科目
                                     foreach (var subjectscore in jssr.Subjects)
                                     {
+                                        // 彈性課程記數
+                                        int AlternativeCourse = 0;
+                                        int SubjectCourseNum = 0;
+
+                                        if (subjectscore.Value.Domain == "彈性課程" || subjectscore.Value.Domain == "彈性學習" || subjectscore.Value.Domain == "")
+                                        {
+                                            if (AlternativeCourseDict.ContainsKey(subjectscore.Value.Subject))
+                                            {
+                                                AlternativeCourse = AlternativeCourseDict[subjectscore.Value.Subject];
+
+                                                //紀錄成績
+                                                if (subjectScore_dict.ContainsKey("彈性課程" + AlternativeCourse + "_科目成績_" + (grade * 2 - 1)))
+                                                {
+
+                                                    subjectScore_dict["彈性課程" + AlternativeCourse + "_科目成績_" + (grade * 2 - 1)] = subjectscore.Value.Score;
+                                                }
+
+                                                //紀錄等第
+                                                if (subjectLevel_dict.ContainsKey("彈性課程" + AlternativeCourse + "_科目等第_" + (grade * 2 - 1)))
+                                                {
+                                                    subjectLevel_dict["彈性課程" + AlternativeCourse + "_科目等第_" + (grade * 2 - 1)] = ScoreTolevel(subjectscore.Value.Score);
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+
+                                        }
+
                                         //紀錄成績
                                         if (subjectScore_dict.ContainsKey("科目_" + subjectscore.Value.Subject + "_成績_" + (grade * 2 - 1)))
                                         {
@@ -1263,6 +1359,34 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                     //科目
                                     foreach (var subjectscore in jssr.Subjects)
                                     {
+                                        // 彈性課程記數
+                                        int AlternativeCourse = 0;
+                                        int SubjectCourseNum = 0;
+
+                                        // 領域為彈性課程 、或是沒有領域的科目成績 算到彈性課程科目處理
+                                        if (subjectscore.Value.Domain == "彈性課程" || subjectscore.Value.Domain == "彈性學習" || subjectscore.Value.Domain == "")
+                                        {
+                                            if (AlternativeCourseDict.ContainsKey(subjectscore.Value.Subject))
+                                            {
+                                                AlternativeCourse = AlternativeCourseDict[subjectscore.Value.Subject];
+                                                //紀錄成績
+                                                if (subjectScore_dict.ContainsKey("彈性課程" + AlternativeCourse + "_科目成績_" + (grade * 2)))
+                                                {
+                                                    subjectScore_dict["彈性課程" + AlternativeCourse + "_科目成績_" + (grade * 2)] = subjectscore.Value.Score;
+                                                }
+
+                                                //紀錄等第
+                                                if (subjectLevel_dict.ContainsKey("彈性課程" + AlternativeCourse + "_科目等第_" + (grade * 2)))
+                                                {
+                                                    subjectLevel_dict["彈性課程" + AlternativeCourse + "_科目等第_" + (grade * 2)] = ScoreTolevel(subjectscore.Value.Score);
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+
+                                        }
+
                                         //紀錄成績
                                         if (subjectScore_dict.ContainsKey("科目_" + subjectscore.Value.Subject + "_成績_" + (grade * 2)))
                                         {
@@ -1305,7 +1429,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                     // 填領域等第
                     foreach (string key in domainLevel_dict.Keys)
                     {
-                        row[key] = string.IsNullOrEmpty(domainLevel_dict[key])? "-" : domainLevel_dict[key];
+                        row[key] = string.IsNullOrEmpty(domainLevel_dict[key]) ? "-" : domainLevel_dict[key];
                     }
 
                     // 填科目分數
@@ -1317,7 +1441,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                     // 填科目等第
                     foreach (string key in subjectLevel_dict.Keys)
                     {
-                        row[key] =  string.IsNullOrEmpty(subjectLevel_dict[key]) ?  "-" : subjectLevel_dict[key];
+                        row[key] = string.IsNullOrEmpty(subjectLevel_dict[key]) ? "-" : subjectLevel_dict[key];
                     }
 
 
@@ -1432,7 +1556,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                     }
                 }
 
-                row["匯出日期"] = "中華民國" +(DateTime.Today.Year -1911)+"年" + (DateTime.Today.Month) +"月" + (DateTime.Today.Day) +"日";
+                row["匯出日期"] = "中華民國" + (DateTime.Today.Year - 1911) + "年" + (DateTime.Today.Month) + "月" + (DateTime.Today.Day) + "日";
 
                 table.Rows.Add(row);
 
