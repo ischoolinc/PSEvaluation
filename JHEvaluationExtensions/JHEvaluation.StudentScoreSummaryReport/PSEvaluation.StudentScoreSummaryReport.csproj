@@ -232,6 +232,7 @@
     <Compile Include="ReportPreference.cs" />
     <Compile Include="ReportStudent.cs" />
     <Compile Include="RowHeader.cs" />
+    <Compile Include="ScoreMappingConfig.cs" />
     <Compile Include="SLearningDomainParser.cs" />
     <Compile Include="StringComparer.cs" />
     <Compile Include="SubjDomainEngNameMapping.cs" />
