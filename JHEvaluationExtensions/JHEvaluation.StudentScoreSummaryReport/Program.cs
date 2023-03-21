@@ -21,7 +21,8 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
         private const string PermissionCode = "JHEvaluation.Student.StudentScoreSummaryReport";
         private const string PermissionCodeEnglish = "JHEvaluation.Student.StudentScoreSummaryReportEnglish";
-
+        private const string PermissionCodeEnglish2022 = "JHEvaluation.Student.StudentScoreSummaryReportEnglish2022";
+        
         [MainMethod()]
         [STAThread()]
         public static void Main()
@@ -57,6 +58,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
           detail.Add(new ReportFeature(PermissionCode_SutdentReport, "學籍表"));
             detail.Add(new ReportFeature(PermissionCode, "在校成績證明書"));
             detail.Add(new ReportFeature(PermissionCodeEnglish, "在校成績證明書(英文)"));
+            detail.Add(new ReportFeature(PermissionCodeEnglish2022, "在校成績證明書(英文新版)"));
 
             //註冊報表功能項目。
 
@@ -105,7 +107,14 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 new PrintForm_StudentScoreCertificattion_English(K12.Presentation.NLDPanels.Student.SelectedSource).ShowDialog();
             };
 
-           
+            MenuButton mb4 = NLDPanels.Student.RibbonBarItems["資料統計"]["報表"]["成績相關報表"]["在校成績證明書(英文新版)"];
+            mb4.Enable = false;
+            mb4.Click += delegate
+            {
+                new PrintForm_StudentScoreCertificattion_English_New(K12.Presentation.NLDPanels.Student.SelectedSource).ShowDialog();
+            };
+
+
             //權限判斷。
             K12.Presentation.NLDPanels.Student.SelectedSourceChanged += delegate
             {
@@ -116,7 +125,10 @@ namespace JHEvaluation.StudentScoreSummaryReport
                     Framework.User.Acl[PermissionCode].Executable;
 
                 mb2.Enable = (K12.Presentation.NLDPanels.Student.SelectedSource.Count > 0) &&
-                    Framework.User.Acl[PermissionCodeEnglish].Executable;                
+                    Framework.User.Acl[PermissionCodeEnglish].Executable;
+
+                mb4.Enable = (K12.Presentation.NLDPanels.Student.SelectedSource.Count > 0) &&
+                   Framework.User.Acl[PermissionCodeEnglish2022].Executable;
             };
 #endif
         }

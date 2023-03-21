@@ -430,5 +430,158 @@ namespace JHEvaluation.StudentScoreSummaryReport
         /// 服務學時數暫存使用
         /// </summary>
         public static Dictionary<string, Dictionary<string, string>> _SLRDict = new Dictionary<string, Dictionary<string, string>>();
+
+        /// <summary>
+        /// 取得領域List
+        /// </summary>
+        /// <returns></returns>
+        public static List<string> GetDomainList()
+        {
+            List<string> value = new List<string>();
+            try
+            {
+                QueryHelper qh = new QueryHelper();
+                string query = @"
+WITH    domain_mapping AS 
+(
+SELECT	
+	unnest(xpath('//Domains/Domain/@Name',  xmlparse(content replace(replace(content ,'&lt;','<'),'&gt;','>'))))::text AS domain_name
+	, unnest(xpath('//Domains/Domain/@EnglishName',  xmlparse(content replace(replace(content ,'&lt;','<'),'&gt;','>'))))::text AS domain_EnglishName
+FROM  
+    list 
+WHERE name  ='JHEvaluation_Subject_Ordinal'
+)SELECT
+		replace (domain_name ,'&amp;amp;','&') AS domain_name
+		,replace (domain_EnglishName ,'&amp;amp;','&') AS domain_EnglishName
+	FROM  domain_mapping";
+                DataTable dt = qh.Select(query);
+                foreach (DataRow dr in dt.Rows)
+                {
+                    string name = dr["domain_name"].ToString();
+                    if (!value.Contains(name))
+                        value.Add(name);
+                }
+                if (!value.Contains("彈性課程"))
+                    value.Add("彈性課程");
+
+                if (!value.Contains("語文"))
+                    value.Add("語文");
+            }
+            catch (Exception ex) { }
+
+            return value;
+        }
+
+        /// <summary>
+        /// 取得節次對照表
+        /// </summary>
+        /// <returns></returns>
+        public static Dictionary<string, string> GetPeriodMappingDict()
+        {
+            Dictionary<string, string> value = new Dictionary<string, string>();
+            try
+            {
+                QueryHelper qh = new QueryHelper();
+                string query = @"
+SELECT
+    array_to_string(xpath('//Period/@Name', each_period.period), '')::text as name
+	, array_to_string(xpath('//Period/@Type', each_period.period), '')::text as type
+	, row_number() OVER() as period_order
+FROM(
+    SELECT unnest(xpath('//Periods/Period', xmlparse(content content))) as period
+    FROM list
+    WHERE name = '節次對照表'
+) as each_period";
+                DataTable dt = qh.Select(query);
+                foreach (DataRow dr in dt.Rows)
+                {
+                    string name = dr["name"].ToString();
+                    string type = dr["type"].ToString();
+                    if (!value.ContainsKey(name))
+                        value.Add(name, type);
+                }
+
+            }
+            catch (Exception ex) { }
+
+            return value;
+        }
+        /// <summary>
+        /// 獎懲暫存使用
+        /// </summary>
+        public static Dictionary<string, Dictionary<string, Dictionary<string, string>>> _DisciplineDict = new Dictionary<string, Dictionary<string, Dictionary<string, string>>>();
+
+        /// <summary>
+        /// 透過學生編號,取得獎懲總計
+        /// </summary>
+        /// <param name="StudentIDList"></param>
+        /// /// <returns></returns>
+        public static Dictionary<string, Dictionary<string, Dictionary<string, string>>> GetDisciplineDetail(List<string> StudentIDList)
+        {
+            //key=id
+            //key1=學年度_學期
+            //key2= 獎懲type
+            Dictionary<string, Dictionary<string, Dictionary<string, string>>> retVal = new Dictionary<string, Dictionary<string, Dictionary<string, string>>>();
+            if (StudentIDList.Count > 0)
+            {
+                QueryHelper qh = new QueryHelper();
+                string query = @"WITH data AS(
+SELECT 
+	ref_student_id 
+	, school_year 
+	, semester 
+	,  ('0'||array_to_string(xpath('//Discipline/Merit/@A', xmlparse(content detail)), '')::text)::decimal  as 大功 
+	,  ('0'||array_to_string(xpath('//Discipline/Merit/@B', xmlparse(content detail)), '')::text)::decimal  as 小功 
+	,  ('0'||array_to_string(xpath('//Discipline/Merit/@C', xmlparse(content detail)), '')::text)::decimal as 嘉獎 
+	,  ('0'||array_to_string(xpath('//Discipline/Demerit/@A', xmlparse(content detail)), '')::text)::decimal  as 大過 
+	,  ('0'||array_to_string(xpath('//Discipline/Demerit/@B', xmlparse(content detail)), '')::text)::decimal  as 小過 
+	,  ('0'||array_to_string(xpath('//Discipline/Demerit/@C', xmlparse(content detail)), '')::text)::decimal  as 警告 
+	, array_to_string(xpath('//Discipline/Demerit/@Cleared', xmlparse(content detail)), '')::text  as 已銷過 
+FROM discipline 
+WHERE ref_student_id IN ('" + string.Join("','", StudentIDList.ToArray()) + @"')
+)
+SELECT 
+	ref_student_id
+	, school_year
+	, semester
+	, SUM(大功) AS 大功統計 
+	, SUM(小功) AS 小功統計 
+	, SUM(嘉獎) AS 嘉獎統計 
+	, SUM(大過) AS 大過統計 
+	, SUM(小過) AS 小過統計 
+	, SUM(警告) AS 警告統計 
+FROM data 
+WHERE 已銷過  <> '是'
+GROUP BY  school_year,semester,ref_student_id
+ORDER BY school_year,semester";
+
+                DataTable dt = qh.Select(query);
+                foreach (DataRow dr in dt.Rows)
+                {
+                    string sid = dr["ref_student_id"].ToString();
+                    string key1 = dr["school_year"].ToString() + "_" + dr["semester"].ToString();
+
+                    if (!retVal.ContainsKey(sid))
+                        retVal.Add(sid, new Dictionary<string, Dictionary<string, string>>());
+
+                    if (!retVal[sid].ContainsKey(key1))
+                        retVal[sid].Add(key1, new Dictionary<string, string>());
+
+                    if (!retVal[sid][key1].ContainsKey("大功"))
+                        retVal[sid][key1].Add("大功", dr["大功統計"].ToString());
+                    if (!retVal[sid][key1].ContainsKey("小功"))
+                        retVal[sid][key1].Add("小功", dr["小功統計"].ToString());
+                    if (!retVal[sid][key1].ContainsKey("嘉獎"))
+                        retVal[sid][key1].Add("嘉獎", dr["嘉獎統計"].ToString());
+                    if (!retVal[sid][key1].ContainsKey("大過"))
+                        retVal[sid][key1].Add("大過", dr["大過統計"].ToString());
+                    if (!retVal[sid][key1].ContainsKey("小過"))
+                        retVal[sid][key1].Add("小過", dr["小過統計"].ToString());
+                    if (!retVal[sid][key1].ContainsKey("警告"))
+                        retVal[sid][key1].Add("警告", dr["警告統計"].ToString());
+                }
+            }
+            return retVal;
+        }
     }
 }

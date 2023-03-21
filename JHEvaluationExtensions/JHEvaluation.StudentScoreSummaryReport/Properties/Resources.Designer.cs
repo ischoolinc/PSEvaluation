@@ -19,7 +19,7 @@ namespace JHEvaluation.StudentScoreSummaryReport.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -66,6 +66,36 @@ namespace JHEvaluation.StudentScoreSummaryReport.Properties {
         internal static byte[] Template {
             get {
                 object obj = ResourceManager.GetObject("Template", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] 在校成績證明書_2022功能變數 {
+            get {
+                object obj = ResourceManager.GetObject("在校成績證明書_2022功能變數", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] 在校成績證明書_2022英文版_範本 {
+            get {
+                object obj = ResourceManager.GetObject("在校成績證明書_2022英文版_範本", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] 在校成績證明書_2022英文版功能變數 {
+            get {
+                object obj = ResourceManager.GetObject("在校成績證明書_2022英文版功能變數", resourceCulture);
                 return ((byte[])(obj));
             }
         }

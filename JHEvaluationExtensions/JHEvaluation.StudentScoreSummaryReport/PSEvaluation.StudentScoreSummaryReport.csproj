@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>JHEvaluation.StudentScoreSummaryReport</RootNamespace>
     <AssemblyName>PSEvaluation.StudentScoreSummaryReport</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -139,7 +139,7 @@
     </Reference>
     <Reference Include="InternationalNumericFormatter">
       <HintPath>Library\InternationalNumericFormatter.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="JHSchool, Version=1.0.2.20, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -159,6 +159,7 @@
     <Reference Include="JHScoreReportDAL, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Library\JHScoreReportDAL.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="K12.Data, Version=1.9.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -172,9 +173,15 @@
     </Reference>
     <Reference Include="PSEvaluation.ScoreCalculation">
       <HintPath>Library\PSEvaluation.ScoreCalculation.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="PSSchool.Evaluation">
       <HintPath>Library\PSSchool.Evaluation.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ReportHelper">
+      <HintPath>D:\ischool_test\t_kcbs_p\modules\JHCore\ReportHelper.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -190,11 +197,18 @@
     <Compile Include="AbsenceTypeForm.Designer.cs">
       <DependentUpon>AbsenceTypeForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Global.cs" />
     <Compile Include="LearningDomainParser.cs" />
     <Compile Include="Prc.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Prc.resx</DependentUpon>
+    </Compile>
+    <Compile Include="PrintForm_StudentScoreCertificattion_English_New.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PrintForm_StudentScoreCertificattion_English_New.Designer.cs">
+      <DependentUpon>PrintForm_StudentScoreCertificattion_English_New.cs</DependentUpon>
     </Compile>
     <Compile Include="PrintForm_StudentScoreCertificattion_English.cs">
       <SubType>Form</SubType>
@@ -255,6 +269,10 @@
       <LastGenOutput>Prc.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="PrintForm_StudentScoreCertificattion_English_New.resx">
+      <DependentUpon>PrintForm_StudentScoreCertificattion_English_New.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="PrintForm_StudentScoreCertificattion_English.resx">
       <DependentUpon>PrintForm_StudentScoreCertificattion_English.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -284,6 +302,9 @@
   <ItemGroup>
     <None Include="Aspose.Total.lic" />
     <None Include="Resources\Template.doc" />
+    <None Include="Resources\在校成績證明書_2022功能變數.doc" />
+    <None Include="Resources\在校成績證明書_2022英文版_範本.doc" />
+    <None Include="Resources\在校成績證明書_2022英文版功能變數.doc" />
     <None Include="Resources\學生在校成績證明書%28英文%29.doc" />
     <None Include="Resources\學生在校成績證明書.doc" />
     <None Include="Resources\康橋國小學籍表%28樣板%29.doc" />
