@@ -48,6 +48,9 @@ namespace JHEvaluation.StudentScoreSummaryReport
         //可以印出來的領域
         List<string> DomainList = Util.GetDomainList();
 
+        // 取得科目對照
+        List<string> SubjectNameList = Util.GetSubjectList();
+
         // 缺曠 [studentID,List<Data>]
         Dictionary<string, List<K12.Data.AttendanceRecord>> ar_dict = new Dictionary<string, List<K12.Data.AttendanceRecord>>();
         List<string> plist = K12.Data.PeriodMapping.SelectAll().Select(x => x.Type).Distinct().ToList();
@@ -141,6 +144,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
             //學期成績(包含領域、科目) (改用 JHSemesterScoreRecord 才抓的到)
             List<JHSemesterScoreRecord> ssr_list = JHSemesterScore.SelectByStudentIDs(StudentIDs);
 
+
             //缺曠
             List<K12.Data.AttendanceRecord> ar_list = K12.Data.Attendance.SelectByStudentIDs(StudentIDs);
 
@@ -173,6 +177,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 }
             }
 
+
             //整理學期歷程
             foreach (K12.Data.SemesterHistoryRecord shr in shr_list)
             {
@@ -182,9 +187,27 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 }
             }
 
+            // 科目從新排序
+            SortedDictionary<string, K12.Data.SubjectScore> sortDict = new SortedDictionary<string, K12.Data.SubjectScore>(new Framework.StringComparer(SubjectNameList.ToArray()));
+
+
+
             //整理學期成績(包含領域、科目) 紀錄
             foreach (JHSemesterScoreRecord ssr in ssr_list)
             {
+                sortDict.Clear();
+                foreach (string key in ssr.Subjects.Keys)
+                {
+                    sortDict.Add(key, ssr.Subjects[key]);
+                }
+
+                ssr.Subjects.Clear();
+
+                foreach (string key in sortDict.Keys)
+                {
+                    ssr.Subjects.Add(key, sortDict[key]);
+                }
+
                 if (!jssr_dict.ContainsKey(ssr.RefStudentID))
                 {
                     jssr_dict.Add(ssr.RefStudentID, new List<JHSemesterScoreRecord>());
@@ -1690,10 +1713,10 @@ namespace JHEvaluation.StudentScoreSummaryReport
                         {
                             if (!table.Columns.Contains(key))
                                 table.Columns.Add(key);
-                            
+
                             row[key] = domainScore_dict[key];
                         }
-                            
+
                     }
 
                     // 填領域等第
@@ -1704,9 +1727,9 @@ namespace JHEvaluation.StudentScoreSummaryReport
                             if (!table.Columns.Contains(key))
                                 table.Columns.Add(key);
 
-                            row[key] = domainLevel_dict[key];
+                            row[key] = string.IsNullOrEmpty(domainLevel_dict[key]) ? "-" : domainLevel_dict[key];
                         }
-                            
+
                     }
 
                     // 填領域權數
@@ -1716,9 +1739,9 @@ namespace JHEvaluation.StudentScoreSummaryReport
                         {
                             if (!table.Columns.Contains(key))
                                 table.Columns.Add(key);
-                            
+
                             row[key] = domainCredit_dict[key];
-                        }                            
+                        }
                     }
 
                     // 填科目分數
@@ -1729,7 +1752,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                             if (!table.Columns.Contains(key))
                                 table.Columns.Add(key);
                             row[key] = subjectScore_dict[key];
-                        }                            
+                        }
                     }
 
                     // 填科目等第
@@ -1740,9 +1763,9 @@ namespace JHEvaluation.StudentScoreSummaryReport
                             if (!table.Columns.Contains(key))
                                 table.Columns.Add(key);
 
-                            row[key] = subjectLevel_dict[key];
+                            row[key] = string.IsNullOrEmpty(subjectLevel_dict[key]) ? "-" : subjectLevel_dict[key];
                         }
-                            
+
                     }
 
                     // 填科目權數
@@ -1755,7 +1778,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
                             row[key] = subjectCredit_dict[key];
                         }
-                            
+
                     }
 
                 }
@@ -2157,4 +2180,5 @@ namespace JHEvaluation.StudentScoreSummaryReport
             }
         }
     }
+
 }

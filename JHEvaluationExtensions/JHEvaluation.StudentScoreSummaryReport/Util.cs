@@ -432,6 +432,44 @@ namespace JHEvaluation.StudentScoreSummaryReport
         public static Dictionary<string, Dictionary<string, string>> _SLRDict = new Dictionary<string, Dictionary<string, string>>();
 
         /// <summary>
+        /// 取得科目對照
+        /// </summary>
+        /// <returns></returns>
+        public static List<string> GetSubjectList()
+        {
+            List<string> value = new List<string>();
+            try
+            {
+                QueryHelper qh = new QueryHelper();
+                string query = @"
+WITH    Subject_mapping AS 
+(
+SELECT	
+	unnest(xpath('//Subjects/Subject/@Name',  xmlparse(content replace(replace(content ,'&lt;','<'),'&gt;','>'))))::text AS Subject_name
+	, unnest(xpath('//Subjects/Subject/@EnglishName',  xmlparse(content replace(replace(content ,'&lt;','<'),'&gt;','>'))))::text AS Subject_EnglishName
+FROM  
+    list 
+WHERE name  ='JHEvaluation_Subject_Ordinal'
+)SELECT
+		replace (Subject_name ,'&amp;amp;','&') AS subject_name
+		,replace (Subject_EnglishName ,'&amp;amp;','&') AS Subject_EnglishName
+	FROM  Subject_mapping";
+                DataTable dt = qh.Select(query);
+                foreach (DataRow dr in dt.Rows)
+                {
+                    string name = dr["subject_name"].ToString();
+                    if (!value.Contains(name))
+                        value.Add(name);
+                }
+
+            }
+            catch (Exception ex) { }
+
+            return value;
+        }
+
+
+        /// <summary>
         /// 取得領域List
         /// </summary>
         /// <returns></returns>
@@ -466,6 +504,9 @@ WHERE name  ='JHEvaluation_Subject_Ordinal'
 
                 if (!value.Contains("語文"))
                     value.Add("語文");
+
+                if (!value.Contains("生活課程"))
+                    value.Add("生活課程");
             }
             catch (Exception ex) { }
 
