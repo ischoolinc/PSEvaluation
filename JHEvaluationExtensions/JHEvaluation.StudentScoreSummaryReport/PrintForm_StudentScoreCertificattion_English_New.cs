@@ -1887,7 +1887,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
             //執行 合併列印
             document.MailMerge.FieldMergingCallback = new InsertDocumentAtMailMergeHandler();
             document.MailMerge.Execute(table);
-
+            document.MailMerge.DeleteFields();
             // 最終產物 .doc
             e.Result = document;
 
