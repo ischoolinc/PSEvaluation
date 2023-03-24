@@ -2049,7 +2049,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                     }
                     else
                     {
-                        document.Save(fbdPath + "\\" + fileName + ".doc");
+                        document.Save(fbdPath + "\\" + fileName + ".docx");
 
                         int percent = (((i + 1) * 100 / doc.Sections.Count));
 
