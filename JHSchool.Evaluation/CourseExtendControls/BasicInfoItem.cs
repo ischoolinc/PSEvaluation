@@ -456,6 +456,22 @@ namespace JHSchool.Evaluation.CourseExtendControls
                 if (items.Count <= 0) //沒有任何更動。
                     return;
 
+                // 新增必填檢查：學年度和學期
+                if (string.IsNullOrEmpty(cboSchoolYear.Text))
+                {
+                    _errors.SetError(cboSchoolYear, "「學年度」不允許空白。");
+                }
+                if (string.IsNullOrEmpty(cboSemester.Text))
+                {
+                    _errors.SetError(cboSemester, "「學期」不允許空白。");
+                }
+
+                if (_errors.HasError)
+                {
+                    MsgBox.Show("輸入資料未通過驗證，請修正後再儲存");
+                    return;
+                }
+
                 if (_errors.HasError)
                 {
                     MsgBox.Show("輸入資料未通過驗證，請修正後再儲存");
@@ -733,6 +749,17 @@ namespace JHSchool.Evaluation.CourseExtendControls
         {
             if (!_initialing)
             {
+                // 新增必填檢查
+                if (string.IsNullOrEmpty(cboSchoolYear.Text))
+                {
+                    _errors.SetError(cboSchoolYear, "學年度為必填欄位。");
+                }
+                else
+                {
+                    _errors.SetError(cboSchoolYear, ""); // 清除錯誤
+                }
+
+
                 CheckCourseName();
                 ChangeValue("SchoolYear", cboSchoolYear.Text);
             }
@@ -742,6 +769,16 @@ namespace JHSchool.Evaluation.CourseExtendControls
         {
             if (!_initialing)
             {
+                // 新增必填檢查
+                if (string.IsNullOrEmpty(cboSemester.Text))
+                {
+                    _errors.SetError(cboSemester, "學期為必填欄位。");
+                }
+                else
+                {
+                    _errors.SetError(cboSemester, ""); // 清除錯誤
+                }
+
                 CheckCourseName();
                 ChangeValue("Semester", cboSemester.Text);
             }

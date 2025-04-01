@@ -31,7 +31,38 @@ namespace JHSchool.Evaluation.CourseExtendControls.Ribbon
                 int.TryParse(cboSchoolYear.Text, out SchoolYear);
                 int.TryParse(cboSemester.Text, out Semester);
 
+            // 檢查課程名稱是否為空
+            if (string.IsNullOrEmpty(txtName.Text.Trim()))
+            {
+                MessageBox.Show("課程名稱不能空白。");
+                return;
+            }
 
+            // 檢查學年度是否為空
+            if (string.IsNullOrEmpty(cboSchoolYear.Text.Trim()))
+            {
+                MessageBox.Show("學年度不能空白。");
+                return;
+            }
+
+            // 檢查學期是否為空
+            if (string.IsNullOrEmpty(cboSemester.Text.Trim()))
+            {
+                MessageBox.Show("學期不能空白。");
+                return;
+            }
+            // 學年度和學期已確保非空，這裡轉換不會失敗，但仍使用 TryParse 確保格式正確
+            if (!int.TryParse(cboSchoolYear.Text, out SchoolYear))
+            {
+                MessageBox.Show("學年度必須為有效數字。");
+                return;
+            }
+            if (!int.TryParse(cboSemester.Text, out Semester))
+            {
+                MessageBox.Show("學期必須為有效數字。");
+                return;
+            }
+            
             foreach (CourseRecord cr in Course.Instance.Items)
             {
                 if (cr.SchoolYear == SchoolYear && cr.Semester == Semester && cr.Name == txtName.Text)
