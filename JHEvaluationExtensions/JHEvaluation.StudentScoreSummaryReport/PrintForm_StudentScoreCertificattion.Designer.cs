@@ -1,4 +1,4 @@
-﻿namespace JHEvaluation.StudentScoreSummaryReport
+namespace JHEvaluation.StudentScoreSummaryReport
 {
     partial class PrintForm_StudentScoreCertificattion
     {
@@ -39,6 +39,8 @@
             this.panel4 = new System.Windows.Forms.Panel();
             this.OneFileSave = new DevComponents.DotNetBar.Controls.CheckBoxX();
             this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            this.lblTemplateSelector = new System.Windows.Forms.Label();
+            this.cboTemplateSelector = new System.Windows.Forms.ComboBox();
             this.gpFormat.SuspendLayout();
             this.panel6.SuspendLayout();
             this.groupPanel4.SuspendLayout();
@@ -51,7 +53,7 @@
             this.btnExit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnExit.BackColor = System.Drawing.Color.Transparent;
             this.btnExit.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.btnExit.Location = new System.Drawing.Point(294, 155);
+            this.btnExit.Location = new System.Drawing.Point(294, 193);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(75, 23);
             this.btnExit.TabIndex = 3;
@@ -65,7 +67,7 @@
             this.btnPrint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnPrint.BackColor = System.Drawing.Color.Transparent;
             this.btnPrint.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.btnPrint.Location = new System.Drawing.Point(213, 155);
+            this.btnPrint.Location = new System.Drawing.Point(213, 193);
             this.btnPrint.Name = "btnPrint";
             this.btnPrint.Size = new System.Drawing.Size(75, 23);
             this.btnPrint.TabIndex = 2;
@@ -78,7 +80,7 @@
             this.lnkTemplate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lnkTemplate.AutoSize = true;
             this.lnkTemplate.BackColor = System.Drawing.Color.Transparent;
-            this.lnkTemplate.Location = new System.Drawing.Point(9, 161);
+            this.lnkTemplate.Location = new System.Drawing.Point(9, 199);
             this.lnkTemplate.Name = "lnkTemplate";
             this.lnkTemplate.Size = new System.Drawing.Size(86, 17);
             this.lnkTemplate.TabIndex = 5;
@@ -242,7 +244,7 @@
             this.linkLabel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linkLabel1.AutoSize = true;
             this.linkLabel1.BackColor = System.Drawing.Color.Transparent;
-            this.linkLabel1.Location = new System.Drawing.Point(95, 161);
+            this.linkLabel1.Location = new System.Drawing.Point(95, 199);
             this.linkLabel1.Name = "linkLabel1";
             this.linkLabel1.Size = new System.Drawing.Size(112, 17);
             this.linkLabel1.TabIndex = 22;
@@ -251,10 +253,38 @@
             this.linkLabel1.Text = "檢視合併欄位總表";
             this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
             // 
+            // lblTemplateSelector
+            // 
+            this.lblTemplateSelector.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblTemplateSelector.AutoSize = true;
+            this.lblTemplateSelector.BackColor = System.Drawing.Color.Transparent;
+            this.lblTemplateSelector.Location = new System.Drawing.Point(9, 164);
+            this.lblTemplateSelector.Name = "lblTemplateSelector";
+            this.lblTemplateSelector.Size = new System.Drawing.Size(65, 17);
+            this.lblTemplateSelector.TabIndex = 23;
+            this.lblTemplateSelector.Text = "使用樣板：";
+            // 
+            // cboTemplateSelector
+            // 
+            this.cboTemplateSelector.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.cboTemplateSelector.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboTemplateSelector.FormattingEnabled = true;
+            this.cboTemplateSelector.Items.AddRange(new object[] {
+            "低年級",
+            "中高年級",
+            "自訂報表"});
+            this.cboTemplateSelector.Location = new System.Drawing.Point(78, 160);
+            this.cboTemplateSelector.Name = "cboTemplateSelector";
+            this.cboTemplateSelector.Size = new System.Drawing.Size(129, 25);
+            this.cboTemplateSelector.TabIndex = 24;
+            this.cboTemplateSelector.SelectedIndexChanged += new System.EventHandler(this.cboTemplateSelector_SelectedIndexChanged);
+            // 
             // PrintForm_StudentScoreCertificattion
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.ClientSize = new System.Drawing.Size(374, 184);
+            this.ClientSize = new System.Drawing.Size(374, 222);
+            this.Controls.Add(this.cboTemplateSelector);
+            this.Controls.Add(this.lblTemplateSelector);
             this.Controls.Add(this.linkLabel1);
             this.Controls.Add(this.groupPanel4);
             this.Controls.Add(this.gpFormat);
@@ -263,8 +293,8 @@
             this.Controls.Add(this.btnExit);
             this.DoubleBuffered = true;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximumSize = new System.Drawing.Size(390, 223);
-            this.MinimumSize = new System.Drawing.Size(390, 223);
+            this.MaximumSize = new System.Drawing.Size(390, 261);
+            this.MinimumSize = new System.Drawing.Size(390, 261);
             this.Name = "PrintForm_StudentScoreCertificattion";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "學生在校成績證明書列印設定";
@@ -292,5 +322,7 @@
         private System.Windows.Forms.Panel panel4;
         private DevComponents.DotNetBar.Controls.CheckBoxX OneFileSave;
         private System.Windows.Forms.LinkLabel linkLabel1;
+        private System.Windows.Forms.Label lblTemplateSelector;
+        private System.Windows.Forms.ComboBox cboTemplateSelector;
     }
 }

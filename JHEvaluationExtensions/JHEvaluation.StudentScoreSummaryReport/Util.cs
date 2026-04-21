@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
@@ -12,6 +12,7 @@ using System.Globalization;
 using FISCA.Data;
 using System.Data;
 using System.IO;
+using System.Xml;
 
 namespace JHEvaluation.StudentScoreSummaryReport
 {
@@ -23,6 +24,93 @@ namespace JHEvaluation.StudentScoreSummaryReport
         public const string EnglishFormat = "MMMM dd, yyyy";
 
         public static CultureInfo USCulture = new CultureInfo("en-us");
+
+        public class SubjectOrdinalInfo
+        {
+            public int SubjectOrdinal { get; set; }
+            public string SubjectName { get; set; }
+            public string EnglishName { get; set; }
+        }
+
+        public static List<SubjectOrdinalInfo> GetSubjectOrdinalList()
+        {
+            List<SubjectOrdinalInfo> value = new List<SubjectOrdinalInfo>();
+
+            try
+            {
+                QueryHelper qh = new QueryHelper();
+                DataTable dt = qh.Select("select content from list where name = 'JHEvaluation_Subject_Ordinal'");
+                if (dt.Rows.Count <= 0)
+                    return value;
+
+                string content = dt.Rows[0]["content"] + "";
+                if (string.IsNullOrWhiteSpace(content))
+                    return value;
+
+                // list.content 常見為 XML，且內部 XML 可能被 encode 成 &lt;...&gt; 形式。
+                string decodedContent = content.Replace("&lt;", "<").Replace("&gt;", ">").Replace("&amp;amp;", "&");
+
+                XmlDocument doc = new XmlDocument();
+                doc.LoadXml(decodedContent);
+
+                XmlNode subjectOrdinalNode = doc.SelectSingleNode("/Configurations/Configuration[@Name='SubjectOrdinal']");
+                if (subjectOrdinalNode == null)
+                    return value;
+
+                string innerXmlText = subjectOrdinalNode.InnerText ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(innerXmlText))
+                    return value;
+
+                string decodedInner = innerXmlText.Replace("&lt;", "<").Replace("&gt;", ">").Replace("&amp;amp;", "&");
+
+                XmlDocument innerDoc = new XmlDocument();
+                innerDoc.LoadXml(decodedInner);
+
+                foreach (XmlElement subjectElement in innerDoc.SelectNodes("/Subjects/Subject"))
+                {
+                    int ordinal = 0;
+                    int.TryParse(subjectElement.GetAttribute("ordinal"), out ordinal);
+
+                    value.Add(new SubjectOrdinalInfo()
+                    {
+                        SubjectOrdinal = ordinal,
+                        SubjectName = subjectElement.GetAttribute("Name"),
+                        EnglishName = subjectElement.GetAttribute("EnglishName")
+                    });
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            return value;
+        }
+
+        public static Dictionary<string, int> GetSubjectOrdinalDict()
+        {
+            Dictionary<string, int> value = new Dictionary<string, int>();
+
+            foreach (SubjectOrdinalInfo info in GetSubjectOrdinalList())
+            {
+                if (!string.IsNullOrEmpty(info.SubjectName) && !value.ContainsKey(info.SubjectName))
+                    value.Add(info.SubjectName, info.SubjectOrdinal);
+            }
+
+            return value;
+        }
+
+        public static Dictionary<string, string> GetSubjectEnglishNameDict()
+        {
+            Dictionary<string, string> value = new Dictionary<string, string>();
+
+            foreach (SubjectOrdinalInfo info in GetSubjectOrdinalList())
+            {
+                if (!string.IsNullOrEmpty(info.SubjectName) && !value.ContainsKey(info.SubjectName))
+                    value.Add(info.SubjectName, info.EnglishName);
+            }
+
+            return value;
+        }
 
         public static void DisableControls(Control topControl)
         {

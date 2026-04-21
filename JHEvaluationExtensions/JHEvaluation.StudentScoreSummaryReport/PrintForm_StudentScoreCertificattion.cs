@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
@@ -14,6 +14,7 @@ using System.IO;
 using System.Data;
 using Microsoft.International.Formatters;
 using System.Globalization;
+using System.Linq;
 
 
 namespace JHEvaluation.StudentScoreSummaryReport
@@ -25,6 +26,12 @@ namespace JHEvaluation.StudentScoreSummaryReport
         private List<string> StudentIDs { get; set; }
 
         private ReportPreference Preference { get; set; }
+
+        private ReportPreference TemplatePreference1 { get; set; }
+        private ReportPreference TemplatePreference2 { get; set; }
+        private ReportPreference TemplatePreference3 { get; set; }
+
+        private int SelectedTemplateIndex = 1;
 
         private BackgroundWorker MasterWorker = new BackgroundWorker();
 
@@ -68,6 +75,11 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
             StudentIDs = studentIds;
             Preference = new ReportPreference(ConfigName, Prc.學生在校成績證明書);
+
+            TemplatePreference1 = new ReportPreference(ConfigName + "_Template1", Prc.學生在校成績證明書);
+            TemplatePreference2 = new ReportPreference(ConfigName + "_Template2", Prc.學生在校成績證明書);
+            TemplatePreference3 = new ReportPreference(ConfigName + "_Template3", Prc.學生在校成績證明書);
+
             MasterWorker.DoWork += new DoWorkEventHandler(MasterWorker_DoWork);
             MasterWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(MasterWorker_RunWorkerCompleted);
             MasterWorker.WorkerReportsProgress = true;
@@ -92,6 +104,43 @@ namespace JHEvaluation.StudentScoreSummaryReport
             // 是否要單檔列印
             OneFileSave.Checked = Preference.OneFileSave;
 
+            // 預設使用樣板：低年級 (Template1)
+            if (cboTemplateSelector != null)
+                cboTemplateSelector.SelectedIndex = 0;
+            SelectedTemplateIndex = 1;
+
+        }
+
+        private ReportPreference GetCurrentTemplatePreference()
+        {
+            switch (SelectedTemplateIndex)
+            {
+                case 2:
+                    return TemplatePreference2;
+                case 3:
+                    return TemplatePreference3;
+                case 1:
+                default:
+                    return TemplatePreference1;
+            }
+        }
+
+        private Stream GetCurrentTemplateStream()
+        {
+            ReportPreference current = GetCurrentTemplatePreference();
+
+            if (current != null && current.Template != null)
+                return current.Template.GetStream();
+
+            return new MemoryStream(Prc.學生在校成績證明書);
+        }
+
+        private void cboTemplateSelector_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cboTemplateSelector.SelectedIndex < 0)
+                return;
+
+            SelectedTemplateIndex = cboTemplateSelector.SelectedIndex + 1;
         }
 
         private void btnPrint_Click(object sender, EventArgs e)
@@ -663,6 +712,27 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 table.Columns.Add("彈性課程" + i + "_科目名稱");
             }
 
+            // 各領域科目(最多6科)：科目名稱 / 成績 / 原始成績 / 權數
+            List<string> domainList = GetDomainList();
+            int maxSubject = 6;
+
+            foreach (string domain in domainList)
+            {
+                for (int i = 1; i <= maxSubject; i++)
+                {
+                    table.Columns.Add(domain + "_科目名稱" + i);
+
+                    for (int s = 1; s <= 12; s++)
+                    {
+                        table.Columns.Add(domain + "_科目" + i + "_成績" + s);
+                        table.Columns.Add(domain + "_科目" + i + "_原始成績" + s);
+                        table.Columns.Add(domain + "_科目" + i + "_權數" + s);
+                        table.Columns.Add(domain + "_科目" + i + "_等第" + s);
+                        table.Columns.Add(domain + "_科目" + i + "_原始等第" + s);
+                    }
+                }
+            }
+
 
             #endregion
 
@@ -921,6 +991,16 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 subjectScore_dict.Clear();
                 subjectLevel_dict.Clear();
                 textScore_dict.Clear();
+
+                // 各領域科目(最多6科)資料結構
+                Dictionary<string, List<string>> subjectNameListByDomain = new Dictionary<string, List<string>>();
+                Dictionary<string, Dictionary<string, int>> subjectCourseDict = new Dictionary<string, Dictionary<string, int>>();
+
+                Dictionary<string, decimal?> subjectScoreDict = new Dictionary<string, decimal?>();
+                Dictionary<string, decimal?> subjectOriginScoreDict = new Dictionary<string, decimal?>();
+                Dictionary<string, decimal?> subjectCreditDict = new Dictionary<string, decimal?>();
+                Dictionary<string, string> subjectLevelByDomainDict = new Dictionary<string, string>();
+                Dictionary<string, string> subjectOriginLevelByDomainDict = new Dictionary<string, string>();
 
                 // 建立缺曠 對照字典
                 foreach (string ab in absenceType_list)
@@ -1244,6 +1324,22 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
                                         AlternativeCourseDict.Add(subjectscore.Value.Subject, AlternativeCourse);
                                     }
+
+                                    // 蒐集：固定9個領域、各領域科目清單
+                                    string domain = NormalizeDomainName(subjectscore.Value.Domain);
+                                    string subjectName = subjectscore.Value.Subject;
+
+                                    if (string.IsNullOrWhiteSpace(domain) || string.IsNullOrWhiteSpace(subjectName))
+                                        continue;
+
+                                    if (!domainList.Contains(domain))
+                                        continue;
+
+                                    if (!subjectNameListByDomain.ContainsKey(domain))
+                                        subjectNameListByDomain.Add(domain, new List<string>());
+
+                                    if (!subjectNameListByDomain[domain].Contains(subjectName))
+                                        subjectNameListByDomain[domain].Add(subjectName);
                                 }
                             }
                         }
@@ -1251,6 +1347,35 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 }
 
 
+
+                // 科目排序：優先使用「科目資料管理」(Util.GetSubjectOrdinalDict)，無資料時 fallback 預設排序
+                Dictionary<string, int> subjectOrdinalDict = Util.GetSubjectOrdinalDict();
+                if (subjectOrdinalDict == null || subjectOrdinalDict.Count == 0)
+                    subjectOrdinalDict = GetDefaultSubjectOrdinalDict();
+
+                // 建立每領域前6科對照 + 寫入科目名稱
+                foreach (string domain in domainList)
+                {
+                    subjectCourseDict[domain] = new Dictionary<string, int>();
+
+                    if (!subjectNameListByDomain.ContainsKey(domain))
+                        continue;
+
+                    var subjects = subjectNameListByDomain[domain]
+                        .OrderBy(x => subjectOrdinalDict.ContainsKey(x) ? subjectOrdinalDict[x] : int.MaxValue)
+                        .ThenBy(x => x)
+                        .Take(6)
+                        .ToList();
+
+                    for (int i = 0; i < subjects.Count; i++)
+                    {
+                        string name = subjects[i];
+                        int index = i + 1;
+
+                        subjectCourseDict[domain][name] = index;
+                        row[domain + "_科目名稱" + index] = name;
+                    }
+                }
 
                 // 學期成績(包含領域、科目)
                 if (jssr_dict.ContainsKey(stuID))
@@ -1309,6 +1434,34 @@ namespace JHEvaluation.StudentScoreSummaryReport
                                         else
                                         {
 
+                                        }
+
+                                        // 各領域科目(最多6科)：成績/原始成績/權數
+                                        {
+                                            string domain = NormalizeDomainName(subjectscore.Value.Domain);
+                                            string subjectName = subjectscore.Value.Subject;
+
+                                            if (subjectCourseDict.ContainsKey(domain) && subjectCourseDict[domain].ContainsKey(subjectName))
+                                            {
+                                                int subjectIndex = subjectCourseDict[domain][subjectName];
+                                                int semesterIndex = ((grade - 1) * 2) + 1;
+
+                                                string scoreKey = domain + "_科目" + subjectIndex + "_成績" + semesterIndex;
+                                                string originKey = domain + "_科目" + subjectIndex + "_原始成績" + semesterIndex;
+                                                string creditKey = domain + "_科目" + subjectIndex + "_權數" + semesterIndex;
+
+                                                subjectScoreDict[scoreKey] = subjectscore.Value.Score;
+                                                subjectOriginScoreDict[originKey] = subjectscore.Value.ScoreOrigin.HasValue ? subjectscore.Value.ScoreOrigin.Value : (decimal?)null;
+                                                subjectCreditDict[creditKey] = subjectscore.Value.Credit;
+
+                                                string levelKey = domain + "_科目" + subjectIndex + "_等第" + semesterIndex;
+                                                if (subjectscore.Value.Score.HasValue)
+                                                    subjectLevelByDomainDict[levelKey] = ScoreTolevel(subjectscore.Value.Score.Value);
+
+                                                string originLevelKey = domain + "_科目" + subjectIndex + "_原始等第" + semesterIndex;
+                                                if (subjectscore.Value.ScoreOrigin.HasValue)
+                                                    subjectOriginLevelByDomainDict[originLevelKey] = ScoreTolevel(subjectscore.Value.ScoreOrigin.Value);
+                                            }
                                         }
 
                                         //紀錄成績
@@ -1387,6 +1540,34 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
                                         }
 
+                                        // 各領域科目(最多6科)：成績/原始成績/權數
+                                        {
+                                            string domain = NormalizeDomainName(subjectscore.Value.Domain);
+                                            string subjectName = subjectscore.Value.Subject;
+
+                                            if (subjectCourseDict.ContainsKey(domain) && subjectCourseDict[domain].ContainsKey(subjectName))
+                                            {
+                                                int subjectIndex = subjectCourseDict[domain][subjectName];
+                                                int semesterIndex = ((grade - 1) * 2) + 2;
+
+                                                string scoreKey = domain + "_科目" + subjectIndex + "_成績" + semesterIndex;
+                                                string originKey = domain + "_科目" + subjectIndex + "_原始成績" + semesterIndex;
+                                                string creditKey = domain + "_科目" + subjectIndex + "_權數" + semesterIndex;
+
+                                                subjectScoreDict[scoreKey] = subjectscore.Value.Score;
+                                                subjectOriginScoreDict[originKey] = subjectscore.Value.ScoreOrigin.HasValue ? subjectscore.Value.ScoreOrigin.Value : (decimal?)null;
+                                                subjectCreditDict[creditKey] = subjectscore.Value.Credit;
+
+                                                string levelKey = domain + "_科目" + subjectIndex + "_等第" + semesterIndex;
+                                                if (subjectscore.Value.Score.HasValue)
+                                                    subjectLevelByDomainDict[levelKey] = ScoreTolevel(subjectscore.Value.Score.Value);
+
+                                                string originLevelKey = domain + "_科目" + subjectIndex + "_原始等第" + semesterIndex;
+                                                if (subjectscore.Value.ScoreOrigin.HasValue)
+                                                    subjectOriginLevelByDomainDict[originLevelKey] = ScoreTolevel(subjectscore.Value.ScoreOrigin.Value);
+                                            }
+                                        }
+
                                         //紀錄成績
                                         if (subjectScore_dict.ContainsKey("科目_" + subjectscore.Value.Subject + "_成績_" + (grade * 2)))
                                         {
@@ -1442,6 +1623,31 @@ namespace JHEvaluation.StudentScoreSummaryReport
                     foreach (string key in subjectLevel_dict.Keys)
                     {
                         row[key] = string.IsNullOrEmpty(subjectLevel_dict[key]) ? "-" : subjectLevel_dict[key];
+                    }
+
+                    // 寫回：各領域科目(最多6科)
+                    foreach (var key in subjectScoreDict.Keys)
+                        if (table.Columns.Contains(key))
+                            row[key] = subjectScoreDict[key];
+
+                    foreach (var key in subjectOriginScoreDict.Keys)
+                        if (table.Columns.Contains(key))
+                            row[key] = subjectOriginScoreDict[key];
+
+                    foreach (var key in subjectCreditDict.Keys)
+                        if (table.Columns.Contains(key))
+                            row[key] = subjectCreditDict[key];
+
+                    foreach (var key in subjectLevelByDomainDict.Keys)
+                    {
+                        if (table.Columns.Contains(key))
+                            row[key] = string.IsNullOrEmpty(subjectLevelByDomainDict[key]) ? "-" : subjectLevelByDomainDict[key];
+                    }
+
+                    foreach (var key in subjectOriginLevelByDomainDict.Keys)
+                    {
+                        if (table.Columns.Contains(key))
+                            row[key] = string.IsNullOrEmpty(subjectOriginLevelByDomainDict[key]) ? "-" : subjectOriginLevelByDomainDict[key];
                     }
 
 
@@ -1569,7 +1775,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
             }
 
             //選擇 目前的樣板
-            document = new Document(Preference.Template.GetStream());
+            document = new Document(GetCurrentTemplateStream());
 
             //執行 合併列印
             document.MailMerge.Execute(table);
@@ -1609,6 +1815,54 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 level = "";
             }
             return level;
+        }
+
+        /// <summary>
+        /// 科目資料管理無設定時，領域內科目 fallback 排序（未列名稱者仍以名稱字串排序）。
+        /// </summary>
+        private Dictionary<string, int> GetDefaultSubjectOrdinalDict()
+        {
+            string[] order = new string[]
+            {
+                "國語文", "語文", "國文", "國語", "英文", "英語", "數學", "社會", "歷史", "公民", "地理",
+                "藝術與人文", "自然與生活科技", "自然科學", "理化", "生物", "健康與體育", "綜合活動", "學習領域", "彈性課程"
+            };
+            Dictionary<string, int> dict = new Dictionary<string, int>();
+            for (int i = 0; i < order.Length; i++)
+            {
+                if (!dict.ContainsKey(order[i]))
+                    dict.Add(order[i], i);
+            }
+            return dict;
+        }
+
+        private List<string> GetDomainList()
+        {
+            return new List<string>()
+            {
+                "語文領域",
+                "數學領域",
+                "社會領域",
+                "生活課程領域",
+                "自然科學領域",
+                "藝術領域",
+                "綜合活動領域",
+                "科技領域",
+                "健康與體育領域"
+            };
+        }
+
+        private string NormalizeDomainName(string domain)
+        {
+            if (string.IsNullOrWhiteSpace(domain))
+                return "";
+
+            domain = domain.Trim();
+
+            if (domain == "數學領域")
+                return "數學領域";
+
+            return domain;
         }
 
         private void MasterWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -1797,13 +2051,14 @@ namespace JHEvaluation.StudentScoreSummaryReport
         private void lnkTemplate_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             ReportTemplate defaultTemplate = new ReportTemplate(Prc.學生在校成績證明書, TemplateType.Word);
-            TemplateSettingForm form = new TemplateSettingForm(Preference.Template, defaultTemplate);
+            ReportPreference currentTemplatePreference = GetCurrentTemplatePreference();
+            TemplateSettingForm form = new TemplateSettingForm(currentTemplatePreference.Template, defaultTemplate);
             form.DefaultFileName = "在校成績證明書(樣版).doc";
 
             if (form.ShowDialog() == DialogResult.OK)
             {
-                Preference.Template = (form.Template == defaultTemplate) ? null : form.Template;
-                Preference.Save();
+                currentTemplatePreference.Template = (form.Template == defaultTemplate) ? null : form.Template;
+                currentTemplatePreference.Save();
             }
         }
 
