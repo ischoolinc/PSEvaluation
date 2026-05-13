@@ -712,9 +712,9 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 table.Columns.Add("彈性課程" + i + "_科目名稱");
             }
 
-            // 各領域科目(最多6科)：科目名稱 / 成績 / 原始成績 / 權數
+            // 各領域科目(最多10科)：科目名稱 / 成績 / 原始成績 / 權數
             List<string> domainList = GetDomainList();
-            int maxSubject = 6;
+            int maxSubject = 10;
 
             foreach (string domain in domainList)
             {
@@ -992,7 +992,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                 subjectLevel_dict.Clear();
                 textScore_dict.Clear();
 
-                // 各領域科目(最多6科)資料結構
+                // 各領域科目(最多10科)資料結構
                 Dictionary<string, List<string>> subjectNameListByDomain = new Dictionary<string, List<string>>();
                 Dictionary<string, Dictionary<string, int>> subjectCourseDict = new Dictionary<string, Dictionary<string, int>>();
 
@@ -1074,7 +1074,10 @@ namespace JHEvaluation.StudentScoreSummaryReport
                     row["學生班級"] = sr_dict[stuID].Class != null ? sr_dict[stuID].Class.Name : "";
                     row["學生性別"] = sr_dict[stuID].Gender;
 
-                    birthday = (DateTime)sr_dict[stuID].Birthday;
+                    if (sr_dict[stuID].Birthday.HasValue)
+                        birthday = sr_dict[stuID].Birthday.Value;
+
+                    //birthday = (DateTime)sr_dict[stuID].Birthday;
                     // 轉換出生時間 成 2005/09/06 的格式
                     //row["出生日期"] = birthday.ToString("yyyy/MM/dd");
 
@@ -1436,7 +1439,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
                                         }
 
-                                        // 各領域科目(最多6科)：成績/原始成績/權數
+                                        // 各領域科目(最多10科)：成績/原始成績/權數
                                         {
                                             string domain = NormalizeDomainName(subjectscore.Value.Domain);
                                             string subjectName = subjectscore.Value.Subject;
@@ -1540,7 +1543,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
                                         }
 
-                                        // 各領域科目(最多6科)：成績/原始成績/權數
+                                        // 各領域科目(最多10科)：成績/原始成績/權數
                                         {
                                             string domain = NormalizeDomainName(subjectscore.Value.Domain);
                                             string subjectName = subjectscore.Value.Subject;
@@ -1625,7 +1628,7 @@ namespace JHEvaluation.StudentScoreSummaryReport
                         row[key] = string.IsNullOrEmpty(subjectLevel_dict[key]) ? "-" : subjectLevel_dict[key];
                     }
 
-                    // 寫回：各領域科目(最多6科)
+                    // 寫回：各領域科目(最多10科)
                     foreach (var key in subjectScoreDict.Keys)
                         if (table.Columns.Contains(key))
                             row[key] = subjectScoreDict[key];
@@ -1840,15 +1843,15 @@ namespace JHEvaluation.StudentScoreSummaryReport
         {
             return new List<string>()
             {
-                "語文領域",
-                "數學領域",
-                "社會領域",
-                "生活課程領域",
-                "自然科學領域",
-                "藝術領域",
-                "綜合活動領域",
-                "科技領域",
-                "健康與體育領域"
+                "語文",
+                "數學",
+                "社會",
+                "生活課程",
+                "自然科學",
+                "藝術",
+                "綜合活動",
+                "科技",
+                "健康與體育"
             };
         }
 
@@ -1859,8 +1862,8 @@ namespace JHEvaluation.StudentScoreSummaryReport
 
             domain = domain.Trim();
 
-            if (domain == "數學領域")
-                return "數學領域";
+            if (domain == "數學")
+                return "數學";
 
             return domain;
         }
@@ -2065,6 +2068,9 @@ namespace JHEvaluation.StudentScoreSummaryReport
         //供使用者下載學籍表合併欄位總表
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
+            //string outputPath = @"F:\Temp\領域科目動態合併欄位.docx";
+            //DomainSubjectDocxGenerator.GenerateDomainSubjectMergeFieldDocx(outputPath);
+
             //宣告產生的報表
             Aspose.Words.Document document = new Aspose.Words.Document();
 

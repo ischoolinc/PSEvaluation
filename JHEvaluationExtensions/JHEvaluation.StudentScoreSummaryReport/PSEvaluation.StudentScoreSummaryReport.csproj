@@ -197,6 +197,7 @@
     <Compile Include="AbsenceTypeForm.Designer.cs">
       <DependentUpon>AbsenceTypeForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="DomainSubjectDocxGenerator.cs" />
     <Compile Include="Global.cs" />
     <Compile Include="LearningDomainParser.cs" />
     <Compile Include="Prc.Designer.cs">
