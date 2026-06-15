@@ -320,11 +320,12 @@ namespace JHSchool.Evaluation
             //rbButton = Class.Instance.RibbonBarItems["成績"]["班級開課"];
             rbButton.Enable = User.Acl["JHSchool.Class.Ribbon0070"].Executable;
             rbButton.Image = Properties.Resources.organigram_refresh_64;
-            rbButton["依課程規劃表開課"].Click += delegate
-            {
-                if (K12.Presentation.NLDPanels.Class.SelectedSource.Count > 0)
-                    JHSchool.Evaluation.ClassExtendControls.Ribbon.CreateCoursesByProgramPlan.Run();
-            };
+            // 暫時停用：依課程規劃表開課
+            //rbButton["依課程規劃表開課"].Click += delegate
+            //{
+            //    if (K12.Presentation.NLDPanels.Class.SelectedSource.Count > 0)
+            //        JHSchool.Evaluation.ClassExtendControls.Ribbon.CreateCoursesByProgramPlan.Run();
+            //};
             rbButton["直接開課"].Click += delegate
             {
                 if (Class.Instance.SelectedList.Count > 0) new JHSchool.Evaluation.ClassExtendControls.Ribbon.CreateCoursesDirectly();
@@ -581,11 +582,12 @@ namespace JHSchool.Evaluation
 
             //rbItem["課程規劃表"].Size = RibbonBarButton.MenuButtonSize.Large;
             //rbItem["課程規劃表"].Image = ClassExtendControls.Ribbon.Resources.btnProgramPlan_Image;
-            rbItem["設定"]["課程規劃表"].Enable = User.Acl["JHSchool.EduAdmin.Ribbon0050"].Executable;
-            rbItem["設定"]["課程規劃表"].Click += delegate
-            {
-                new ProgramPlanManager().ShowDialog();
-            };
+            // 暫時停用：教務作業 > 設定 > 課程規劃表
+            //rbItem["設定"]["課程規劃表"].Enable = User.Acl["JHSchool.EduAdmin.Ribbon0050"].Executable;
+            //rbItem["設定"]["課程規劃表"].Click += delegate
+            //{
+            //    new ProgramPlanManager().ShowDialog();
+            //};
 
             //rbItem["成績計算規則"].Size = RibbonBarButton.MenuButtonSize.Large;
             //rbItem["成績計算規則"].Image = JHSchool.Evaluation.CourseExtendControls.Ribbon.Resources.course_plan;
@@ -644,7 +646,8 @@ namespace JHSchool.Evaluation
             //detail.Add(new DetailItemFeature(typeof(CourseScoreItem)));
 
             Catalog ribbon = RoleAclSource.Instance["學生"]["功能按鈕"];
-            ribbon.Add(new RibbonFeature("JHSchool.Student.Ribbon0055", "課程規劃"));
+            // 暫時停用：學生 > 指定 > 課程規劃
+            //ribbon.Add(new RibbonFeature("JHSchool.Student.Ribbon0055", "課程規劃"));
             ribbon.Add(new RibbonFeature("JHSchool.Student.Ribbon0056", "計算規則"));
             ribbon.Add(new RibbonFeature("JHSchool.Student.Ribbon0057", "計算成績"));
             ribbon.Add(new RibbonFeature("JHSchool.Student.Ribbon0058", "畢業資格審查"));
@@ -668,7 +671,8 @@ namespace JHSchool.Evaluation
 
             //班級
             ribbon = RoleAclSource.Instance["班級"]["功能按鈕"];
-            ribbon.Add(new RibbonFeature("JHSchool.Class.Ribbon0055", "課程規劃"));
+            // 暫時停用：班級 > 指定 > 課程規劃
+            //ribbon.Add(new RibbonFeature("JHSchool.Class.Ribbon0055", "課程規劃"));
             ribbon.Add(new RibbonFeature("JHSchool.Class.Ribbon0056", "計算規則"));
             ribbon.Add(new RibbonFeature("JHSchool.Class.Ribbon0070", "班級開課"));
 
@@ -702,7 +706,8 @@ namespace JHSchool.Evaluation
             ribbon.Add(new RibbonFeature("JHSchool.EduAdmin.Ribbon0040", "成績計算規則"));
             ribbon.Add(new RibbonFeature("JHSchool.EduAdmin.Ribbon0045", "計算成績"));
             ribbon.Add(new RibbonFeature("JHSchool.EduAdmin.Ribbon0046", "畢業資格審查"));
-            ribbon.Add(new RibbonFeature("JHSchool.EduAdmin.Ribbon0050", "課程規劃表"));
+            // 暫時停用：教務作業 > 設定 > 課程規劃表
+            //ribbon.Add(new RibbonFeature("JHSchool.EduAdmin.Ribbon0050", "課程規劃表"));
 
             //建文的舊功能
             //ribbon = RoleAclSource.Instance["學務作業"];

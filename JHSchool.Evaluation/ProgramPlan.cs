@@ -119,7 +119,8 @@ namespace JHSchool.Evaluation
                 _studentProgramPlanField.Reload();
             };
 
-            AddAssignProgramPlanButtons();
+            // 暫時停用：班級/學生 > 指定 > 課程規劃
+            //AddAssignProgramPlanButtons();
 
             _initialize = true;
         }
