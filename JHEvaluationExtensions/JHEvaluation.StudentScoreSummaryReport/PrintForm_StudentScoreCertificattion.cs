@@ -76,7 +76,9 @@ namespace JHEvaluation.StudentScoreSummaryReport
             StudentIDs = studentIds;
             Preference = new ReportPreference(ConfigName, Prc.學生在校成績證明書);
 
-            TemplatePreference1 = new ReportPreference(ConfigName + "_Template1", Prc.學生在校成績證明書);
+            // 原本預設
+            TemplatePreference1 = new ReportPreference(ConfigName
+                , Prc.學生在校成績證明書);
             TemplatePreference2 = new ReportPreference(ConfigName + "_Template2", Prc.學生在校成績證明書);
             TemplatePreference3 = new ReportPreference(ConfigName + "_Template3", Prc.學生在校成績證明書);
 
